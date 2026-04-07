@@ -1,67 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>SALA AR - PROYECTO DOCENTE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SALA AR - PROFESOR</title>
     
-    <!-- Librerías de AR (Solo se activarán en el móvil) -->
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <!-- Solo cargamos el generador de QR al inicio -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background-color: #0f172a; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #0f172a; font-family: sans-serif; }
         
-        /* ESTILO PARA LA PANTALLA DE LA PC */
+        /* VISTA PC */
         #pc-view {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; color: white; text-align: center;
+            height: 100vh; color: white; text-align: center; z-index: 10; position: relative;
         }
-        .qr-card { background: white; padding: 30px; border-radius: 20px; margin: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .marcador-container { background: #1e293b; padding: 20px; border-radius: 15px; border: 2px dashed #38bdf8; }
-        .marcador-img { width: 180px; border: 15px solid black; display: block; margin: 10px auto; }
-        h1 { color: #38bdf8; margin: 0; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin: 20px; }
+        .marcador { width: 150px; border: 15px solid black; margin: 15px auto; display: block; }
+        h1 { color: #38bdf8; font-size: 2rem; }
 
-        /* ARREGLO PARA EL ZOOM DEL CELULAR */
-        video { width: 100vw !important; height: 100vh !important; margin-left: 0 !important; top: 0 !important; object-fit: cover !important; }
+        /* VISTA CELULAR (AR) */
+        #ar-view { display: none; width: 100%; height: 100%; }
+        
+        /* FIX PARA EL ZOOM: Forzamos el video a ocupar toda la pantalla sin zoom raro */
+        video {
+            width: 100vw !important;
+            height: 100vh !important;
+            object-fit: cover !important;
+            position: absolute;
+            top: 0; left: 0;
+        }
+        .a-canvas { width: 100% !important; height: 100% !important; }
     </style>
 </head>
-
 <body>
 
-    <!-- SECCIÓN PC (Solo se muestra si NO estamos en modo AR) -->
+    <!-- PANTALLA PARA EL PROYECTOR (PC) -->
     <div id="pc-view">
-        <h1>SALA DE DISEÑO 3D</h1>
-        <p style="color: #94a3b8;">Muestra esta pantalla en el proyector de la clase</p>
-        
-        <div class="qr-card">
-            <p style="color: #0f172a; font-weight: bold; margin-top: 0;">1. ESCANEA PARA EMPEZAR</p>
-            <div id="qrcode"></div>
+        <h1>SALA DE REALIDAD AUMENTADA</h1>
+        <div class="card">
+            <p style="color: #333; font-weight: bold;">1. ESCANEA CON EL CELULAR</p>
+            <div id="qrcode" style="display:inline-block;"></div>
         </div>
-
-        <div class="marcador-container">
-            <p style="margin: 0;">2. APUNTA AQUÍ CON LA CÁMARA</p>
-            <img class="marcador-img" src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg">
-            <p style="font-size: 0.8rem; color: #38bdf8;">Marcador Estándar HIRO</p>
+        <div style="background: #1e293b; padding: 15px; border-radius: 15px; border: 2px dashed #38bdf8;">
+            <p style="margin: 0 0 10px 0;">2. APUNTA AL MARCADOR CUANDO SE ABRA LA CÁMARA</p>
+            <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="marcador">
         </div>
     </div>
 
-    <!-- SECCIÓN AR (Solo se inyecta por JavaScript en el celular) -->
-    <div id="ar-scene-container"></div>
+    <!-- CONTENEDOR PARA LA ESCENA AR -->
+    <div id="ar-view"></div>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const isARMode = urlParams.get('mode') === 'ar';
+        const modoAR = urlParams.get('mode') === 'ar';
 
-        if (isARMode) {
-            // --- ESTAMOS EN EL CELULAR ---
+        if (modoAR) {
+            // --- ESTAMOS EN EL CELULAR: CARGAMOS LIBRERÍAS DINÁMICAMENTE ---
             document.getElementById('pc-view').style.display = 'none';
-            
-            // Inyectamos la escena AR solo aquí para que la PC no pida cámara
-            const arContainer = document.getElementById('ar-scene-container');
-            arContainer.innerHTML = `
-                <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 1280; displayHeight: 720;" vr-mode-ui="enabled: false">
+            document.getElementById('ar-view').style.display = 'block';
+
+            const cargarScript = (url) => {
+                return new Promise((resolve) => {
+                    const script = document.createElement('script');
+                    script.src = url;
+                    script.onload = resolve;
+                    document.head.appendChild(script);
+                });
+            };
+
+            // Cargamos A-Frame y AR.js solo si es celular
+            Promise.all([
+                cargarScript('https://aframe.io/releases/1.2.0/aframe.min.js'),
+                cargarScript('https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js')
+            ]).then(() => {
+                const escenaHTML = `
+                <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;" vr-mode-ui="enabled: false">
                     <a-assets>
                         <a-asset-item id="modelo" src="modelo1.glb"></a-asset-item>
                     </assets>
@@ -75,19 +90,19 @@
                         </a-entity>
                     </a-marker>
                     <a-entity camera></a-entity>
-                </a-scene>
-            `;
+                </a-scene>`;
+                document.getElementById('ar-view').innerHTML = escenaHTML;
+            });
+
         } else {
             // --- ESTAMOS EN LA PC ---
-            // Generamos el QR que lleva al modo AR
-            const arUrl = window.location.href.split('?')[0] + "?mode=ar";
+            const linkAR = window.location.href.split('?')[0] + "?mode=ar";
             new QRCode(document.getElementById("qrcode"), {
-                text: arUrl,
-                width: 220,
-                height: 220
+                text: linkAR,
+                width: 200,
+                height: 200
             });
         }
     </script>
-
 </body>
 </html>
