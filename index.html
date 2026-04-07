@@ -3,52 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visor de Realidad Aumentada</title>
-    <!-- Importar el componente de Google para modelos 3D -->
+    <title>Laboratorio 3D AR - Prof. Gotasdequenal</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <!-- Librería para generar QR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { margin: 0; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f0f0f0; }
-        model-viewer { width: 100%; height: 80vh; background-color: #eee; }
-        .info { padding: 20px; text-align: center; }
-        .btn-ar { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: row; height: 100vh; background-color: #1a1a1a; color: white; }
+        .panel-control { width: 300px; padding: 20px; background: #252525; display: flex; flex-direction: column; gap: 20px; border-right: 2px solid #333; }
+        .visor-container { flex-grow: 1; position: relative; display: flex; flex-direction: column; }
+        model-viewer { width: 100%; height: 100%; background: radial-gradient(#444, #111); }
+        input { padding: 10px; border-radius: 5px; border: none; width: 100%; box-sizing: border-box; }
+        button { padding: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        #qrcode { background: white; padding: 10px; border-radius: 10px; margin-top: 10px; display: flex; justify-content: center; }
+        .logo-escuela { font-size: 1.2rem; font-weight: bold; color: #00d4ff; text-align: center; }
     </style>
 </head>
 <body>
 
-    <div class="info">
-        <h2 id="titulo">Cargando modelo...</h2>
-        <p>Escanea el QR y toca el botón "Ver en tu espacio"</p>
+    <div class="panel-control">
+        <div class="logo-escuela">SALA DE DISEÑO 3D</div>
+        
+        <div>
+            <label>Nombre del archivo subido:</label>
+            <input type="text" id="fileName" placeholder="ejemplo: mBot2.glb">
+            <button onclick="actualizarModelo()" style="margin-top: 10px; width: 100%;">Cargar y Generar QR</button>
+        </div>
+
+        <div id="qr-section">
+            <p style="font-size: 0.8rem; text-align: center;">Escanea para ver en Realidad Aumentada:</p>
+            <div id="qrcode"></div>
+        </div>
+        
+        <p style="font-size: 0.7rem; color: #888;">Nota: Primero sube el archivo a tu repositorio de GitHub.</p>
     </div>
 
-    <!-- El visor 3D -->
-    <model-viewer 
-        id="viewer"
-        src="" 
-        ar 
-        ar-modes="webxr scene-viewer quick-look" 
-        camera-controls 
-        poster="loading.png" 
-        shadow-intensity="1" 
-        auto-rotate>
-        
-        <button slot="ar-button" style="background-color: white; border-radius: 4px; border: none; position: absolute; top: 16px; right: 16px; padding: 10px;">
-            👋 Activar Realidad Aumentada
-        </button>
-    </model-viewer>
+    <div class="visor-container">
+        <model-viewer id="viewer" src="mBot2.glb" ar ar-modes="webxr scene-viewer quick-look" camera-controls shadow-intensity="1" auto-rotate>
+            <button slot="ar-button" style="background: white; border-radius: 4px; border: none; position: absolute; bottom: 20px; right: 20px; padding: 12px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                👋 VER EN TU ESPACIO (AR)
+            </button>
+        </model-viewer>
+    </div>
 
     <script>
-        // Esta lógica permite usar una sola página para muchos modelos
-        // Si entras a: mipagina.com/?m=perro.glb, cargará el perro.glb
-        const urlParams = new URLSearchParams(window.location.search);
-        const modelo = urlParams.get('m');
         const visor = document.getElementById('viewer');
-        const titulo = document.getElementById('titulo');
+        const qrcodeContainer = document.getElementById("qrcode");
+        let qr = new QRCode(qrcodeContainer, { width: 180, height: 180 });
 
-        if (modelo) {
-            visor.src = modelo;
-            titulo.innerText = "Viendo: " + modelo;
-        } else {
-            titulo.innerText = "No se seleccionó ningún modelo.";
+        // Función para leer la URL y cargar modelo al inicio
+        window.onload = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const modeloUrl = urlParams.get('m');
+            if (modeloUrl) {
+                visor.src = modeloUrl;
+                generarQR(window.location.href);
+            } else {
+                generarQR(window.location.href + "?m=mBot2.glb");
+            }
+        };
+
+        function actualizarModelo() {
+            const name = document.getElementById('fileName').value.trim();
+            if (name === "") return alert("Escribe el nombre del archivo");
+            
+            const newUrl = window.location.origin + window.location.pathname + "?m=" + name;
+            
+            // Actualizar visor y QR
+            visor.src = name;
+            generarQR(newUrl);
+            
+            // Actualizar la barra de direcciones sin recargar
+            window.history.pushState({}, '', newUrl);
+        }
+
+        function generarQR(texto) {
+            qr.clear();
+            qr.makeCode(texto);
         }
     </script>
 </body>
