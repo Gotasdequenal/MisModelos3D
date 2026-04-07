@@ -2,107 +2,33 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SALA AR - PROFESOR</title>
-    
-    <!-- Solo cargamos el generador de QR al inicio -->
+    <title>SALA AR - PANEL DOCENTE</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #0f172a; font-family: sans-serif; }
-        
-        /* VISTA PC */
-        #pc-view {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; color: white; text-align: center; z-index: 10; position: relative;
-        }
-        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin: 20px; }
-        .marcador { width: 150px; border: 15px solid black; margin: 15px auto; display: block; }
-        h1 { color: #38bdf8; font-size: 2rem; }
-
-        /* VISTA CELULAR (AR) */
-        #ar-view { display: none; width: 100%; height: 100%; }
-        
-        /* FIX PARA EL ZOOM: Forzamos el video a ocupar toda la pantalla sin zoom raro */
-        video {
-            width: 100vw !important;
-            height: 100vh !important;
-            object-fit: cover !important;
-            position: absolute;
-            top: 0; left: 0;
-        }
-        .a-canvas { width: 100% !important; height: 100% !important; }
+        body { background: #0f172a; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
+        .marcador { width: 200px; border: 20px solid black; margin-top: 20px; }
+        h1 { color: #38bdf8; }
     </style>
 </head>
 <body>
-
-    <!-- PANTALLA PARA EL PROYECTOR (PC) -->
-    <div id="pc-view">
-        <h1>SALA DE REALIDAD AUMENTADA</h1>
-        <div class="card">
-            <p style="color: #333; font-weight: bold;">1. ESCANEA CON EL CELULAR</p>
-            <div id="qrcode" style="display:inline-block;"></div>
-        </div>
-        <div style="background: #1e293b; padding: 15px; border-radius: 15px; border: 2px dashed #38bdf8;">
-            <p style="margin: 0 0 10px 0;">2. APUNTA AL MARCADOR CUANDO SE ABRA LA CÁMARA</p>
-            <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="marcador">
-        </div>
+    <h1>SALA DE DISEÑO 3D</h1>
+    <div class="card">
+        <p style="color: black; font-weight: bold;">1. ESCANEA PARA EMPEZAR</p>
+        <div id="qrcode"></div>
     </div>
-
-    <!-- CONTENEDOR PARA LA ESCENA AR -->
-    <div id="ar-view"></div>
+    <p>2. LUEGO APUNTA A ESTE MARCADOR:</p>
+    <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="marcador">
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const modoAR = urlParams.get('mode') === 'ar';
-
-        if (modoAR) {
-            // --- ESTAMOS EN EL CELULAR: CARGAMOS LIBRERÍAS DINÁMICAMENTE ---
-            document.getElementById('pc-view').style.display = 'none';
-            document.getElementById('ar-view').style.display = 'block';
-
-            const cargarScript = (url) => {
-                return new Promise((resolve) => {
-                    const script = document.createElement('script');
-                    script.src = url;
-                    script.onload = resolve;
-                    document.head.appendChild(script);
-                });
-            };
-
-            // Cargamos A-Frame y AR.js solo si es celular
-            Promise.all([
-                cargarScript('https://aframe.io/releases/1.2.0/aframe.min.js'),
-                cargarScript('https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js')
-            ]).then(() => {
-                const escenaHTML = `
-                <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;" vr-mode-ui="enabled: false">
-                    <a-assets>
-                        <a-asset-item id="modelo" src="modelo1.glb"></a-asset-item>
-                    </assets>
-                    <a-marker preset="hiro">
-                        <a-entity 
-                            gltf-model="#modelo" 
-                            scale="1 1 1" 
-                            position="0 0 0" 
-                            rotation="0 0 0"
-                            animation="property: rotation; to: 0 360 0; loop: true; dur: 8000">
-                        </a-entity>
-                    </a-marker>
-                    <a-entity camera></a-entity>
-                </a-scene>`;
-                document.getElementById('ar-view').innerHTML = escenaHTML;
-            });
-
-        } else {
-            // --- ESTAMOS EN LA PC ---
-            const linkAR = window.location.href.split('?')[0] + "?mode=ar";
-            new QRCode(document.getElementById("qrcode"), {
-                text: linkAR,
-                width: 200,
-                height: 200
-            });
-        }
+        // Generamos el QR que apunta al SEGUNDO archivo (ar.html)
+        const currentPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+        const arUrl = window.location.origin + currentPath + "ar.html";
+        new QRCode(document.getElementById("qrcode"), {
+            text: arUrl,
+            width: 250,
+            height: 250
+        });
     </script>
 </body>
 </html>
