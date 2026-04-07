@@ -2,60 +2,95 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Simulador AR Pro - Gotasdequenal</title>
+    <title>Editor AR Pro - Gotasdequenal</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; height: 100vh; overflow: hidden; }
-        #sidebar { width: 320px; background: #1e293b; padding: 25px; border-right: 2px solid #334155; display: flex; flex-direction: column; gap: 15px; z-index: 100; }
-        .control-group { background: #334155; padding: 12px; border-radius: 12px; }
-        label { display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 8px; font-weight: bold; }
-        input[type="range"] { width: 100%; cursor: pointer; accent-color: #38bdf8; }
-        #preview-zone { flex-grow: 1; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        model-viewer { width: 100%; height: 100%; position: absolute; z-index: 2; --poster-color: transparent; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; height: 100vh; overflow: hidden; }
         
-        /* El "Suelo" Hiro en la PC */
-        #stage {
-            position: absolute; width: 300px; height: 300px; background: white; border: 25px solid black;
-            display: flex; align-items: center; justify-content: center;
-            transform: rotateX(75deg); bottom: 10%; z-index: 1; box-shadow: 0 0 100px rgba(0,0,0,0.8);
-        }
-        #stage img { width: 70%; transform: rotateX(-10deg); } /* Imagen HIRO dentro del cuadro */
+        /* CONTENEDOR PRINCIPAL */
+        #editor-layout { display: flex; height: 100vh; width: 100%; }
 
-        .qr-card { background: white; padding: 12px; border-radius: 15px; text-align: center; margin-top: auto; }
-        h2 { color: #38bdf8; margin: 0; font-size: 1.3rem; }
+        /* BARRA LATERAL */
+        #sidebar { 
+            width: 320px; background: #1e293b; padding: 25px; 
+            border-right: 2px solid #334155; display: flex; 
+            flex-direction: column; gap: 20px; box-sizing: border-box;
+        }
+        .control-group { background: #334155; padding: 15px; border-radius: 12px; }
+        label { display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 10px; font-weight: bold; }
+        input[type="range"] { width: 100%; cursor: pointer; accent-color: #38bdf8; }
+        
+        /* BOTÓN PRINCIPAL */
+        #btn-generate {
+            padding: 15px; background: #38bdf8; border: none; border-radius: 10px;
+            color: #0f172a; font-weight: bold; cursor: pointer; font-size: 1rem;
+            transition: 0.3s;
+        }
+        #btn-generate:hover { background: #0ea5e9; transform: scale(1.02); }
+
+        /* ZONA DE PREVISUALIZACIÓN 3D */
+        #preview-zone { flex-grow: 1; position: relative; background: radial-gradient(circle, #1e293b 0%, #0f172a 100%); }
+        model-viewer { width: 100%; height: 100%; }
+
+        /* PANTALLA FINAL DEL MARCADOR (OCULTA AL INICIO) */
+        #presentation-view {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; color: black; z-index: 1000;
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+        .hiro-frame { border: 40px solid black; padding: 60px; background: white; margin-bottom: 20px; }
+        .hiro-img { width: 250px; }
+        .qr-final { margin-top: 20px; text-align: center; }
+        #btn-back { position: absolute; top: 20px; left: 20px; padding: 10px 20px; cursor: pointer; border-radius: 5px; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
 
-    <div id="sidebar">
-        <h2>EDITOR AR</h2>
-        <div class="control-group">
-            <label>ESCALA: <span id="scale-val">1.0</span>x</label>
-            <input type="range" id="scale" min="0.1" max="4" step="0.1" value="1" oninput="actualizar()">
+    <!-- VISTA 1: EDITOR -->
+    <div id="editor-layout">
+        <div id="sidebar">
+            <h2 style="color: #38bdf8; margin: 0;">EDITOR AR</h2>
+            <div class="control-group">
+                <label>ESCALA (TAMAÑO): <span id="scale-val">1.0</span>x</label>
+                <input type="range" id="scale" min="0.1" max="4" step="0.1" value="1" oninput="actualizar()">
+            </div>
+            <div class="control-group">
+                <label>GIRO HORIZONTAL: <span id="rotate-h-val">0</span>°</label>
+                <input type="range" id="rotate-h" min="0" max="360" step="5" value="0" oninput="actualizar()">
+            </div>
+            <div class="control-group">
+                <label>GIRO VERTICAL: <span id="rotate-v-val">0</span>°</label>
+                <input type="range" id="rotate-v" min="-90" max="90" step="5" value="0" oninput="actualizar()">
+            </div>
+            
+            <button id="btn-generate" onclick="mostrarPresentacion()">🚀 GENERAR VISTA AR</button>
+            <p style="font-size: 0.7rem; color: #94a3b8; text-align: center;">Configura el robot y luego genera el marcador para tus alumnos.</p>
         </div>
-        <div class="control-group">
-            <label>GIRO HORIZONTAL (H): <span id="rotate-h-val">0</span>°</label>
-            <input type="range" id="rotate-h" min="0" max="360" step="5" value="0" oninput="actualizar()">
-        </div>
-        <div class="control-group">
-            <label>GIRO VERTICAL (V): <span id="rotate-v-val">0</span>°</label>
-            <input type="range" id="rotate-v" min="-90" max="90" step="5" value="0" oninput="actualizar()">
-        </div>
-        <button onclick="location.reload()" style="padding:10px; background:#38bdf8; border:none; border-radius:8px; color:#0f172a; font-weight:bold; cursor:pointer;">🚀 REINICIAR</button>
-        <div class="qr-card">
-            <p style="color: #1e293b; font-weight: bold; margin: 0 0 8px 0; font-size: 0.7rem;">ESCANEA Y APUNTA AL CUADRO NEGRO</p>
-            <div id="qrcode" style="display: flex; justify-content: center;"></div>
+
+        <div id="preview-zone">
+            <model-viewer id="visor" src="modelo1.glb" interaction-prompt="none" shadow-intensity="1" environment-image="neutral" exposure="1"></model-viewer>
         </div>
     </div>
 
-    <div id="preview-zone">
-        <div id="stage"><img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg"></div>
-        <model-viewer id="visor" src="modelo1.glb" interaction-prompt="none" shadow-intensity="2" environment-image="neutral" exposure="1"></model-viewer>
+    <!-- VISTA 2: PRESENTACIÓN (MARCADOR HIRO) -->
+    <div id="presentation-view">
+        <button id="btn-back" onclick="cerrarPresentacion()">⬅ Volver al Editor</button>
+        <h2 style="margin-bottom: 30px; font-family: sans-serif;">PANTALLA DE ESCANEO</h2>
+        
+        <div class="hiro-frame">
+            <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="hiro-img">
+        </div>
+
+        <div class="qr-final">
+            <p style="font-weight: bold; margin-bottom: 10px;">1. Escanea este QR:</p>
+            <div id="qrcode" style="display: flex; justify-content: center;"></div>
+            <p style="margin-top: 15px; color: #666;">2. Luego apunta al recuadro negro de arriba</p>
+        </div>
     </div>
 
     <script>
-        var qr = new QRCode(document.getElementById("qrcode"), { width: 140, height: 140 });
+        var qr = new QRCode(document.getElementById("qrcode"), { width: 180, height: 180 });
         const visor = document.getElementById('visor');
 
         function actualizar() {
@@ -67,18 +102,32 @@
             document.getElementById('rotate-h-val').innerText = h;
             document.getElementById('rotate-v-val').innerText = v;
 
-            // Cambios visuales en PC
+            // Cambios en PC
             visor.style.transform = `scale(${s})`;
             visor.orientation = `${v}deg ${h}deg 0deg`;
+        }
 
-            // Actualizar QR para el móvil
+        function mostrarPresentacion() {
+            let s = document.getElementById('scale').value;
+            let h = document.getElementById('rotate-h').value;
+            let v = document.getElementById('rotate-v').value;
+
+            // Generar el link para el móvil con los parámetros elegidos
             let baseUrl = window.location.href.split('index.html')[0].split('?')[0];
             if (!baseUrl.endsWith('/')) baseUrl += '/';
             let finalUrl = baseUrl + "ar.html?s=" + s + "&h=" + h + "&v=" + v;
             
             qr.clear();
             qr.makeCode(finalUrl);
+
+            // Cambiar de vista
+            document.getElementById('presentation-view').style.display = 'flex';
         }
+
+        function cerrarPresentacion() {
+            document.getElementById('presentation-view').style.display = 'none';
+        }
+
         window.onload = actualizar;
     </script>
 </body>
