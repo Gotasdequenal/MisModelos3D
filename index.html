@@ -2,33 +2,93 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>SALA AR - PANEL DOCENTE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SALA AR - PANEL DEL PROFESOR</title>
+    
+    <!-- Librería para generar el código QR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
     <style>
-        body { background: #0f172a; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
-        .marcador { width: 200px; border: 20px solid black; margin-top: 20px; }
-        h1 { color: #38bdf8; }
+        body { 
+            background: #0f172a; 
+            color: white; 
+            font-family: 'Segoe UI', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            margin: 0; 
+        }
+        h1 { color: #38bdf8; margin-bottom: 5px; }
+        p { color: #94a3b8; margin-bottom: 20px; }
+        
+        .card { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .marcador-container {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px dashed #38bdf8;
+            text-align: center;
+        }
+
+        .marcador-img {
+            width: 180px;
+            border: 15px solid black;
+            display: block;
+            margin: 15px auto;
+        }
+
+        #qrcode img {
+            margin: 0 auto;
+        }
     </style>
 </head>
 <body>
+
     <h1>SALA DE DISEÑO 3D</h1>
+    <p>Panel de Control para Realidad Aumentada</p>
+
+    <!-- Caja del QR -->
     <div class="card">
-        <p style="color: black; font-weight: bold;">1. ESCANEA PARA EMPEZAR</p>
+        <p style="color: #0f172a; font-weight: bold; margin-top: 0;">1. ESCANEA ESTE CÓDIGO</p>
         <div id="qrcode"></div>
     </div>
-    <p>2. LUEGO APUNTA A ESTE MARCADOR:</p>
-    <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="marcador">
+
+    <!-- Caja del Marcador HIRO -->
+    <div class="marcador-container">
+        <p style="margin: 0;">2. UNA VEZ ABIERTA LA CÁMARA, APUNTA AQUÍ:</p>
+        <img class="marcador-img" src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" alt="Marcador Hiro">
+        <p style="font-size: 0.8rem; color: #38bdf8; margin: 0;">Marcador Estándar HIRO</p>
+    </div>
 
     <script>
-        // Generamos el QR que apunta al SEGUNDO archivo (ar.html)
-        const currentPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-        const arUrl = window.location.origin + currentPath + "ar.html";
+        // Lógica para detectar la URL automáticamente y apuntar a ar.html
+        // Obtenemos la ruta actual
+        var loc = window.location.href;
+        // Quitamos "index.html" si es que aparece en la barra de direcciones
+        var directory = loc.substring(0, loc.lastIndexOf('/'));
+        // Creamos el link final hacia ar.html
+        var arUrl = directory + "/ar.html";
+
+        // Generar el QR
         new QRCode(document.getElementById("qrcode"), {
             text: arUrl,
-            width: 250,
-            height: 250
+            width: 220,
+            height: 220,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
         });
     </script>
+
 </body>
 </html>
