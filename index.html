@@ -2,126 +2,83 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Simulador AR Profesional</title>
+    <title>Simulador AR Pro - Gotasdequenal</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* PANEL LATERAL */
-        #sidebar { 
-            width: 320px; background: #1e293b; padding: 25px; 
-            border-right: 2px solid #334155; display: flex; 
-            flex-direction: column; gap: 20px; z-index: 100;
-        }
-        .control-group { background: #334155; padding: 15px; border-radius: 12px; }
-        label { display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px; font-weight: bold; }
+        #sidebar { width: 320px; background: #1e293b; padding: 25px; border-right: 2px solid #334155; display: flex; flex-direction: column; gap: 15px; z-index: 100; }
+        .control-group { background: #334155; padding: 12px; border-radius: 12px; }
+        label { display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 8px; font-weight: bold; }
         input[type="range"] { width: 100%; cursor: pointer; accent-color: #38bdf8; }
+        #preview-zone { flex-grow: 1; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        model-viewer { width: 100%; height: 100%; position: absolute; z-index: 2; --poster-color: transparent; }
         
-        /* ZONA DEL VISOR */
-        #preview-zone { 
-            flex-grow: 1; position: relative; 
-            display: flex; align-items: center; justify-content: center;
-            perspective: 1000px;
-        }
-
-        /* EL ROBOT */
-        model-viewer { 
-            width: 100%; height: 100%; 
-            position: absolute; z-index: 2;
-            --poster-color: transparent;
-        }
-
-        /* EL SUELO (MARCADOR HIRO) */
+        /* El "Suelo" Hiro en la PC */
         #stage {
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: white;
-            border: 20px solid black;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transform: rotateX(75deg); /* Tumbado en el suelo */
-            bottom: 15%;
-            z-index: 1;
-            box-shadow: 0 0 100px rgba(0,0,0,0.8);
+            position: absolute; width: 300px; height: 300px; background: white; border: 25px solid black;
+            display: flex; align-items: center; justify-content: center;
+            transform: rotateX(75deg); bottom: 10%; z-index: 1; box-shadow: 0 0 100px rgba(0,0,0,0.8);
         }
-        #stage span { color: black; font-size: 4rem; font-weight: bold; font-family: Arial; }
+        #stage img { width: 70%; transform: rotateX(-10deg); } /* Imagen HIRO dentro del cuadro */
 
-        .qr-card { background: white; padding: 15px; border-radius: 15px; text-align: center; margin-top: auto; }
-        h2 { color: #38bdf8; margin: 0; font-size: 1.4rem; }
+        .qr-card { background: white; padding: 12px; border-radius: 15px; text-align: center; margin-top: auto; }
+        h2 { color: #38bdf8; margin: 0; font-size: 1.3rem; }
     </style>
 </head>
 <body>
 
     <div id="sidebar">
         <h2>EDITOR AR</h2>
-        
         <div class="control-group">
-            <label>ESCALA (TAMAÑO): <span id="scale-val">1.0</span>x</label>
+            <label>ESCALA: <span id="scale-val">1.0</span>x</label>
             <input type="range" id="scale" min="0.1" max="4" step="0.1" value="1" oninput="actualizar()">
         </div>
-
         <div class="control-group">
-            <label>ROTACIÓN: <span id="rotate-val">0</span>°</label>
-            <input type="range" id="rotate" min="0" max="360" step="5" value="0" oninput="actualizar()">
+            <label>GIRO HORIZONTAL (H): <span id="rotate-h-val">0</span>°</label>
+            <input type="range" id="rotate-h" min="0" max="360" step="5" value="0" oninput="actualizar()">
         </div>
-
-        <button onclick="location.reload()" style="padding:12px; background:#38bdf8; border:none; border-radius:8px; color:#0f172a; font-weight:bold; cursor:pointer;">
-            🚀 REINICIAR VISTA
-        </button>
-
+        <div class="control-group">
+            <label>GIRO VERTICAL (V): <span id="rotate-v-val">0</span>°</label>
+            <input type="range" id="rotate-v" min="-90" max="90" step="5" value="0" oninput="actualizar()">
+        </div>
+        <button onclick="location.reload()" style="padding:10px; background:#38bdf8; border:none; border-radius:8px; color:#0f172a; font-weight:bold; cursor:pointer;">🚀 REINICIAR</button>
         <div class="qr-card">
-            <p style="color: #1e293b; font-weight: bold; margin: 0 0 10px 0; font-size: 0.7rem;">ESCANEA PARA VER EN AR</p>
+            <p style="color: #1e293b; font-weight: bold; margin: 0 0 8px 0; font-size: 0.7rem;">ESCANEA Y APUNTA AL CUADRO NEGRO</p>
             <div id="qrcode" style="display: flex; justify-content: center;"></div>
         </div>
     </div>
 
     <div id="preview-zone">
-        <!-- Suelo con efecto Hiro -->
-        <div id="stage"><span>Hiro</span></div>
-
-        <!-- El robot -->
-        <model-viewer 
-            id="visor" 
-            src="modelo1.glb" 
-            interaction-prompt="none"
-            shadow-intensity="2" 
-            environment-image="neutral"
-            exposure="1">
-        </model-viewer>
+        <div id="stage"><img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg"></div>
+        <model-viewer id="visor" src="modelo1.glb" interaction-prompt="none" shadow-intensity="2" environment-image="neutral" exposure="1"></model-viewer>
     </div>
 
     <script>
-        var qr = new QRCode(document.getElementById("qrcode"), { width: 150, height: 150 });
+        var qr = new QRCode(document.getElementById("qrcode"), { width: 140, height: 140 });
         const visor = document.getElementById('visor');
 
         function actualizar() {
             let s = document.getElementById('scale').value;
-            let r = document.getElementById('rotate').value;
+            let h = document.getElementById('rotate-h').value;
+            let v = document.getElementById('rotate-v').value;
             
-            // Actualizar textos
             document.getElementById('scale-val').innerText = s;
-            document.getElementById('rotate-val').innerText = r;
+            document.getElementById('rotate-h-val').innerText = h;
+            document.getElementById('rotate-v-val').innerText = v;
 
-            // --- APLICAR CAMBIOS AL MODELO EN LA PC ---
-            // Aplicar escala al estilo para verlo en la PC
+            // Cambios visuales en PC
             visor.style.transform = `scale(${s})`;
-            
-            // Aplicar rotación al atributo orientation del visor 3D
-            // Usamos la rotación en el eje Y para que gire sobre el marcador
-            visor.setAttribute('orientation', `0deg 0deg ${r}deg`);
+            visor.orientation = `${v}deg ${h}deg 0deg`;
 
-            // --- ACTUALIZAR QR ---
+            // Actualizar QR para el móvil
             let baseUrl = window.location.href.split('index.html')[0].split('?')[0];
             if (!baseUrl.endsWith('/')) baseUrl += '/';
-            let finalUrl = baseUrl + "ar.html?s=" + s + "&r=" + r;
+            let finalUrl = baseUrl + "ar.html?s=" + s + "&h=" + h + "&v=" + v;
             
             qr.clear();
             qr.makeCode(finalUrl);
         }
-
         window.onload = actualizar;
     </script>
 </body>
