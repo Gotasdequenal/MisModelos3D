@@ -2,58 +2,95 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Editor AR Pro - Gotasdequenal</title>
+    <title>Simulador AR - Gotasdequenal</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; height: 100vh; overflow: hidden; }
-        #sidebar { width: 320px; background: #1e293b; padding: 20px; border-right: 2px solid #334155; display: flex; flex-direction: column; gap: 15px; z-index: 10; }
-        #preview-zone { flex-grow: 1; position: relative; background: radial-gradient(circle, #1e293b 0%, #0f172a 100%); }
-        model-viewer { width: 100%; height: 100%; --poster-color: transparent; }
+        
+        /* PANEL IZQUIERDO */
+        #sidebar { 
+            width: 320px; background: #1e293b; padding: 20px; 
+            border-right: 2px solid #334155; display: flex; 
+            flex-direction: column; gap: 15px; z-index: 10; 
+        }
         .control-card { background: #334155; padding: 15px; border-radius: 12px; }
         label { display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px; }
         input[type="range"] { width: 100%; cursor: pointer; }
+        
         .qr-section { background: white; padding: 15px; border-radius: 15px; text-align: center; margin-top: auto; }
-        .marker-img { width: 70px; border: 5px solid black; margin-top: 10px; }
-        #error-msg { position: absolute; top: 20px; left: 20px; color: #ef4444; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 8px; display: none; z-index: 20; border: 1px solid #ef4444; }
+        
+        /* ZONA DE PREVISUALIZACIÓN */
+        #preview-zone { 
+            flex-grow: 1; position: relative; 
+            background: radial-gradient(circle, #1e293b 0%, #0f172a 100%); 
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* EL ROBOT EN LA PC */
+        model-viewer { 
+            width: 100%; height: 100%; 
+            z-index: 2;
+            transition: transform 0.2s ease; /* Para que el escalado se vea suave */
+        }
+
+        /* EL MARCADOR DE "PISO" EN LA PC */
+        #marker-floor {
+            position: absolute;
+            width: 250px;
+            height: 250px;
+            background: white;
+            border: 20px solid black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotateX(70deg) translateY(100px); /* Perspectiva de suelo */
+            z-index: 1;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+        #marker-floor span { color: black; font-weight: bold; font-size: 3rem; font-family: Arial; }
+
+        h2 { color: #38bdf8; margin: 0; font-size: 1.5rem; }
     </style>
 </head>
 <body>
 
     <div id="sidebar">
-        <h2 style="color: #38bdf8; margin: 0;">EDITOR AR</h2>
+        <h2>EDITOR AR</h2>
+        <p style="font-size: 0.8rem; color: #94a3b8; margin-top: -10px;">Simulador de Realidad Aumentada</p>
         
         <div class="control-card">
-            <label>Tamaño en AR (Escala): <span id="scale-val">1</span></label>
-            <input type="range" id="scale" min="0.1" max="10" step="0.1" value="1" oninput="actualizar()">
+            <label>TAMAÑO (Escala): <span id="scale-val">1.0</span>x</label>
+            <input type="range" id="scale" min="0.1" max="5" step="0.1" value="1" oninput="actualizar()">
         </div>
 
         <div class="control-card">
-            <label>Giro Inicial: <span id="rotate-val">0</span>°</label>
+            <label>ROTACIÓN: <span id="rotate-val">0</span>°</label>
             <input type="range" id="rotate" min="0" max="360" step="10" value="0" oninput="actualizar()">
         </div>
 
-        <button onclick="forzarCarga()" style="padding:12px; background:#38bdf8; border:none; border-radius:5px; color:#0f172a; font-weight:bold; cursor:pointer;">🚀 FORZAR CARGA MODELO</button>
+        <button onclick="location.reload()" style="padding:12px; background:#38bdf8; border:none; border-radius:8px; color:#0f172a; font-weight:bold; cursor:pointer; transition: 0.3s;">
+            🔄 RECARGAR ESCENA
+        </button>
 
         <div class="qr-section">
-            <p style="color: #1e293b; font-weight: bold; margin: 0 0 5px 0; font-size: 0.7rem;">ESCANEA PARA VER</p>
+            <p style="color: #1e293b; font-weight: bold; margin: 0 0 10px 0; font-size: 0.7rem;">ESCANEA PARA VER EN MÓVIL</p>
             <div id="qrcode" style="display: flex; justify-content: center;"></div>
-            <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="marker-img">
         </div>
     </div>
 
     <div id="preview-zone">
-        <div id="error-msg">
-            <b>⚠️ ERROR DE CARGA</b><br>
-            El archivo aún no está listo en el servidor.<br>
-            Espera 1 minuto y pulsa el botón azul.
+        <!-- El marcador HIRO dibujado en el piso -->
+        <div id="marker-floor">
+            <span>Hiro</span>
         </div>
         
+        <!-- El robot flotando -->
         <model-viewer 
             id="visor" 
-            src="modelo1.glb?v=1" 
+            src="modelo1.glb" 
             camera-controls 
-            auto-rotate 
+            interaction-prompt="none"
             shadow-intensity="1" 
             exposure="1" 
             environment-image="neutral">
@@ -61,30 +98,25 @@
     </div>
 
     <script>
-        var qr = new QRCode(document.getElementById("qrcode"), { width: 150, height: 150 });
+        var qr = new QRCode(document.getElementById("qrcode"), { width: 160, height: 160 });
         const visor = document.getElementById('visor');
-
-        visor.addEventListener('error', () => {
-            document.getElementById('error-msg').style.display = 'block';
-        });
-
-        visor.addEventListener('load', () => {
-            document.getElementById('error-msg').style.display = 'none';
-        });
-
-        function forzarCarga() {
-            // Añadimos un número aleatorio para romper la memoria caché
-            const v = Math.random();
-            visor.src = "modelo1.glb?v=" + v;
-        }
 
         function actualizar() {
             let s = document.getElementById('scale').value;
             let r = document.getElementById('rotate').value;
+            
+            // Actualizar etiquetas de texto
             document.getElementById('scale-val').innerText = s;
             document.getElementById('rotate-val').innerText = r;
 
-            let baseUrl = window.location.href.split('?')[0].split('index.html')[0];
+            // --- EFECTO VISUAL EN LA PC ---
+            // Escalamos el componente para que veas el tamaño
+            visor.style.transform = `scale(${s})`;
+            // Rotamos el modelo internamente
+            visor.orientation = `0deg 0deg ${r}deg`;
+
+            // --- ACTUALIZAR QR PARA EL CELULAR ---
+            let baseUrl = window.location.href.split('index.html')[0].split('?')[0];
             if (!baseUrl.endsWith('/')) baseUrl += '/';
             let finalUrl = baseUrl + "ar.html?s=" + s + "&r=" + r;
             
@@ -92,6 +124,7 @@
             qr.makeCode(finalUrl);
         }
 
+        // Iniciar al cargar
         window.onload = actualizar;
     </script>
 </body>
