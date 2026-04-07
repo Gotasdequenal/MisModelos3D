@@ -6,39 +6,43 @@
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; }
-        #arjs-video { width: 100vw !important; height: 100vh !important; object-fit: cover !important; top: 0 !important; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+        /* FORZAR CÁMARA A TODA LA PANTALLA SIN ESPACIOS BLANCOS */
+        #arjs-video { 
+            width: 100vw !important; 
+            height: 100vh !important; 
+            object-fit: cover !important; 
+            margin: 0 !important; 
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+        }
+        .a-canvas { width: 100% !important; height: 100% !important; }
     </style>
 </head>
-<body style="margin: 0; overflow: hidden;">
+<body>
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
-        
-        <a-assets>
-            <a-asset-item id="modelo" src="modelo1.glb"></a-asset-item>
-        </a-assets>
-
-        <!-- Luces potentes para ver el mBot -->
+        <a-assets><a-asset-item id="modelo" src="modelo1.glb"></a-asset-item></a-assets>
         <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
         <a-entity light="type: directional; intensity: 1; position: 1 2 1"></a-entity>
 
         <a-marker preset="hiro">
             <a-entity id="entidad" gltf-model="#modelo" position="0 0 0" scale="1 1 1"></a-entity>
         </a-marker>
-
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
         const params = new URLSearchParams(window.location.search);
         const s = params.get('s') || "1";
-        const h = params.get('h') || "0";
-        const v = params.get('v') || "0";
+        const rx = params.get('rx') || "0";
+        const ry = params.get('ry') || "0";
+        const rz = params.get('rz') || "0";
 
         const el = document.getElementById('entidad');
-        // Aplicamos escala y la rotación en los dos ejes
-        // En A-Frame la rotación vertical es el primer número
         el.setAttribute('scale', `${s} ${s} ${s}`);
-        el.setAttribute('rotation', `${v} ${h} 0`);
+        // A-Frame usa X Y Z para la rotación
+        el.setAttribute('rotation', `${rx} ${ry} ${rz}`);
     </script>
 </body>
 </html>
