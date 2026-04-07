@@ -3,83 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laboratorio 3D AR - Prof. Gotasdequenal</title>
+    <title>Visor AR - Profesor</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-    <!-- Librería para generar QR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: row; height: 100vh; background-color: #1a1a1a; color: white; }
-        .panel-control { width: 300px; padding: 20px; background: #252525; display: flex; flex-direction: column; gap: 20px; border-right: 2px solid #333; }
-        .visor-container { flex-grow: 1; position: relative; display: flex; flex-direction: column; }
-        model-viewer { width: 100%; height: 100%; background: radial-gradient(#444, #111); }
-        input { padding: 10px; border-radius: 5px; border: none; width: 100%; box-sizing: border-box; }
-        button { padding: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #0056b3; }
-        #qrcode { background: white; padding: 10px; border-radius: 10px; margin-top: 10px; display: flex; justify-content: center; }
-        .logo-escuela { font-size: 1.2rem; font-weight: bold; color: #00d4ff; text-align: center; }
+        body { margin: 0; font-family: sans-serif; background: #121212; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        .controls { position: absolute; left: 20px; top: 20px; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; backdrop-filter: blur(10px); z-index: 10; width: 250px; }
+        input { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: none; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #00d4ff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        #qrcode { background: white; padding: 10px; border-radius: 10px; margin-top: 15px; display: inline-block; }
+        model-viewer { width: 100vw; height: 100vh; background: #121212; }
+        .instrucciones { font-size: 0.8rem; color: #aaa; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="panel-control">
-        <div class="logo-escuela">SALA DE DISEÑO 3D</div>
-        
-        <div>
-            <label>Nombre del archivo subido:</label>
-            <input type="text" id="fileName" placeholder="ejemplo: mBot2.glb">
-            <button onclick="actualizarModelo()" style="margin-top: 10px; width: 100%;">Cargar y Generar QR</button>
-        </div>
-
-        <div id="qr-section">
-            <p style="font-size: 0.8rem; text-align: center;">Escanea para ver en Realidad Aumentada:</p>
-            <div id="qrcode"></div>
-        </div>
-        
-        <p style="font-size: 0.7rem; color: #888;">Nota: Primero sube el archivo a tu repositorio de GitHub.</p>
+    <div class="controls">
+        <h3>Panel del Docente</h3>
+        <input type="text" id="modelName" placeholder="Nombre: mBot2.glb">
+        <button onclick="generarTodo()">Generar QR para Alumnos</button>
+        <div id="qrcode"></div>
+        <p class="instrucciones">1. Escribe el nombre exacto.<br>2. Genera el QR.<br>3. Escanea con el celular.</p>
     </div>
 
-    <div class="visor-container">
-        <model-viewer id="viewer" src="mBot2.glb" ar ar-modes="webxr scene-viewer quick-look" camera-controls shadow-intensity="1" auto-rotate>
-            <button slot="ar-button" style="background: white; border-radius: 4px; border: none; position: absolute; bottom: 20px; right: 20px; padding: 12px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
-                👋 VER EN TU ESPACIO (AR)
-            </button>
-        </model-viewer>
-    </div>
+    <model-viewer id="visor" src="mBot2.glb" ar ar-modes="webxr scene-viewer quick-look" camera-controls auto-rotate shadow-intensity="1">
+    </model-viewer>
 
     <script>
-        const visor = document.getElementById('viewer');
+        const visor = document.getElementById('visor');
         const qrcodeContainer = document.getElementById("qrcode");
-        let qr = new QRCode(qrcodeContainer, { width: 180, height: 180 });
+        let qr = new QRCode(qrcodeContainer, { width: 200, height: 200 });
 
-        // Función para leer la URL y cargar modelo al inicio
-        window.onload = () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const modeloUrl = urlParams.get('m');
-            if (modeloUrl) {
-                visor.src = modeloUrl;
-                generarQR(window.location.href);
-            } else {
-                generarQR(window.location.href + "?m=mBot2.glb");
-            }
-        };
-
-        function actualizarModelo() {
-            const name = document.getElementById('fileName').value.trim();
-            if (name === "") return alert("Escribe el nombre del archivo");
+        function generarTodo() {
+            const nombre = document.getElementById('modelName').value.trim();
+            if(!nombre) return alert("Escribe el nombre del archivo");
             
-            const newUrl = window.location.origin + window.location.pathname + "?m=" + name;
+            // 1. Cambiar el modelo en la pantalla de la PC
+            visor.src = nombre;
             
-            // Actualizar visor y QR
-            visor.src = name;
-            generarQR(newUrl);
+            // 2. Crear el link para el celular
+            const urlCelular = window.location.origin + window.location.pathname + "?m=" + nombre;
             
-            // Actualizar la barra de direcciones sin recargar
-            window.history.pushState({}, '', newUrl);
+            // 3. Generar el QR con ese link
+            qr.clear();
+            qr.makeCode(urlCelular);
         }
 
-        function generarQR(texto) {
-            qr.clear();
-            qr.makeCode(texto);
+        // Leer link al cargar (para el celular)
+        const params = new URLSearchParams(window.location.search);
+        const m = params.get('m');
+        if(m) {
+            visor.src = m;
+            // Si es un celular, ocultar controles para que vea el modelo directo
+            if(window.innerWidth < 800) {
+                document.querySelector('.controls').style.display = 'none';
+            }
         }
     </script>
 </body>
