@@ -2,93 +2,74 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SALA AR - PANEL DEL PROFESOR</title>
-    
-    <!-- Librería para generar el código QR -->
+    <title>Editor AR - Gotasdequenal</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        body { 
-            background: #0f172a; 
-            color: white; 
-            font-family: 'Segoe UI', sans-serif; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            min-height: 100vh; 
-            margin: 0; 
-        }
-        h1 { color: #38bdf8; margin-bottom: 5px; }
-        p { color: #94a3b8; margin-bottom: 20px; }
-        
-        .card { 
-            background: white; 
-            padding: 30px; 
-            border-radius: 20px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        .marcador-container {
-            background: #1e293b;
-            padding: 20px;
-            border-radius: 15px;
-            border: 2px dashed #38bdf8;
-            text-align: center;
-        }
-
-        .marcador-img {
-            width: 180px;
-            border: 15px solid black;
-            display: block;
-            margin: 15px auto;
-        }
-
-        #qrcode img {
-            margin: 0 auto;
-        }
+        body { margin: 0; font-family: sans-serif; background: #111827; color: white; display: flex; height: 100vh; }
+        #sidebar { width: 350px; background: #1f2937; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #374151; overflow-y: auto; }
+        #preview-container { flex-grow: 1; background: radial-gradient(#374151, #111827); position: relative; }
+        model-viewer { width: 100%; height: 100%; }
+        .control-group { background: #374151; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+        label { display: block; margin-bottom: 10px; font-size: 0.9rem; color: #9ca3af; }
+        input[type="range"] { width: 100%; }
+        .qr-card { background: white; padding: 15px; border-radius: 10px; text-align: center; margin-top: auto; }
+        h2 { color: #38bdf8; font-size: 1.2rem; }
+        .marker-preview { width: 100px; border: 10px solid black; margin: 10px auto; display: block; }
     </style>
 </head>
 <body>
 
-    <h1>SALA DE DISEÑO 3D</h1>
-    <p>Panel de Control para Realidad Aumentada</p>
+    <div id="sidebar">
+        <h2>EDITOR AR</h2>
+        <p style="font-size: 0.8rem; color: #9ca3af;">Ajusta tu modelo antes de escanear</p>
 
-    <!-- Caja del QR -->
-    <div class="card">
-        <p style="color: #0f172a; font-weight: bold; margin-top: 0;">1. ESCANEA ESTE CÓDIGO</p>
-        <div id="qrcode"></div>
+        <div class="control-group">
+            <label>Tamaño del Modelo (Escala)</label>
+            <input type="range" id="scale" min="0.1" max="10" step="0.1" value="1" oninput="updateAll()">
+            <span id="scale-val">1</span>
+        </div>
+
+        <div class="control-group">
+            <label>Rotación Inicial</label>
+            <input type="range" id="rotate" min="0" max="360" step="10" value="0" oninput="updateAll()">
+            <span id="rotate-val">0°</span>
+        </div>
+
+        <div class="qr-card">
+            <p style="color: #111827; font-weight: bold; margin: 0 0 10px 0; font-size: 0.8rem;">ESCANEAME</p>
+            <div id="qrcode"></div>
+            <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="marker-preview">
+        </div>
     </div>
 
-    <!-- Caja del Marcador HIRO -->
-    <div class="marcador-container">
-        <p style="margin: 0;">2. UNA VEZ ABIERTA LA CÁMARA, APUNTA AQUÍ:</p>
-        <img class="marcador-img" src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" alt="Marcador Hiro">
-        <p style="font-size: 0.8rem; color: #38bdf8; margin: 0;">Marcador Estándar HIRO</p>
+    <div id="preview-container">
+        <model-viewer id="view" src="modelo1.glb" camera-controls auto-rotate shadow-intensity="1" background-color="#111827"></model-viewer>
     </div>
 
     <script>
-        // Lógica para detectar la URL automáticamente y apuntar a ar.html
-        // Obtenemos la ruta actual
-        var loc = window.location.href;
-        // Quitamos "index.html" si es que aparece en la barra de direcciones
-        var directory = loc.substring(0, loc.lastIndexOf('/'));
-        // Creamos el link final hacia ar.html
-        var arUrl = directory + "/ar.html";
+        var qr = new QRCode(document.getElementById("qrcode"), { width: 180, height: 180 });
 
-        // Generar el QR
-        new QRCode(document.getElementById("qrcode"), {
-            text: arUrl,
-            width: 220,
-            height: 220,
-            colorDark : "#000000",
-            colorLight : "#ffffff",
-            correctLevel : QRCode.CorrectLevel.H
-        });
+        function updateAll() {
+            let s = document.getElementById('scale').value;
+            let r = document.getElementById('rotate').value;
+            
+            document.getElementById('scale-val').innerText = s;
+            document.getElementById('rotate-val').innerText = r + "°";
+
+            // Actualizar vista previa en PC
+            const mv = document.getElementById('view');
+            mv.style.transform = `scale(${s})`; // Esto es visual en PC
+
+            // Generar Link con parámetros para el celular
+            let dir = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+            let finalUrl = dir + "/ar.html?s=" + s + "&r=" + r;
+            
+            qr.clear();
+            qr.makeCode(finalUrl);
+        }
+
+        window.onload = updateAll;
     </script>
-
 </body>
 </html>
