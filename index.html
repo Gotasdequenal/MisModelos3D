@@ -2,74 +2,96 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Editor AR - Gotasdequenal</title>
+    <title>Editor AR Pro - Gotasdequenal</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; font-family: sans-serif; background: #111827; color: white; display: flex; height: 100vh; }
-        #sidebar { width: 350px; background: #1f2937; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #374151; overflow-y: auto; }
-        #preview-container { flex-grow: 1; background: radial-gradient(#374151, #111827); position: relative; }
-        model-viewer { width: 100%; height: 100%; }
-        .control-group { background: #374151; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
-        label { display: block; margin-bottom: 10px; font-size: 0.9rem; color: #9ca3af; }
-        input[type="range"] { width: 100%; }
-        .qr-card { background: white; padding: 15px; border-radius: 10px; text-align: center; margin-top: auto; }
-        h2 { color: #38bdf8; font-size: 1.2rem; }
-        .marker-preview { width: 100px; border: 10px solid black; margin: 10px auto; display: block; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; height: 100vh; overflow: hidden; }
+        #sidebar { width: 320px; background: #1e293b; padding: 20px; border-right: 2px solid #334155; display: flex; flex-direction: column; gap: 15px; }
+        #preview-zone { flex-grow: 1; position: relative; background: radial-gradient(circle, #1e293b 0%, #0f172a 100%); }
+        
+        /* Estilo del visor 3D */
+        model-viewer { width: 100%; height: 100%; --poster-color: transparent; }
+
+        .control-card { background: #334155; padding: 15px; border-radius: 12px; }
+        label { display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px; }
+        input[type="range"] { width: 100%; cursor: pointer; }
+        
+        .qr-section { background: white; padding: 15px; border-radius: 15px; text-align: center; margin-top: auto; }
+        .marker-img { width: 80px; border: 8px solid black; margin-top: 10px; }
+        
+        #error-msg { position: absolute; top: 20px; left: 20px; color: #ef4444; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; display: none; }
     </style>
 </head>
 <body>
 
     <div id="sidebar">
-        <h2>EDITOR AR</h2>
-        <p style="font-size: 0.8rem; color: #9ca3af;">Ajusta tu modelo antes de escanear</p>
-
-        <div class="control-group">
-            <label>Tamaño del Modelo (Escala)</label>
-            <input type="range" id="scale" min="0.1" max="10" step="0.1" value="1" oninput="updateAll()">
-            <span id="scale-val">1</span>
+        <h2 style="color: #38bdf8; margin: 0;">EDITOR AR</h2>
+        
+        <div class="control-card">
+            <label>Tamaño en AR (Escala): <span id="scale-val">1</span></label>
+            <input type="range" id="scale" min="0.1" max="10" step="0.1" value="1" oninput="actualizar()">
         </div>
 
-        <div class="control-group">
-            <label>Rotación Inicial</label>
-            <input type="range" id="rotate" min="0" max="360" step="10" value="0" oninput="updateAll()">
-            <span id="rotate-val">0°</span>
+        <div class="control-card">
+            <label>Giro Inicial: <span id="rotate-val">0</span>°</label>
+            <input type="range" id="rotate" min="0" max="360" step="10" value="0" oninput="actualizar()">
         </div>
 
-        <div class="qr-card">
-            <p style="color: #111827; font-weight: bold; margin: 0 0 10px 0; font-size: 0.8rem;">ESCANEAME</p>
-            <div id="qrcode"></div>
-            <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="marker-preview">
+        <button onclick="location.reload()" style="padding:10px; background:#38bdf8; border:none; border-radius:5px; color:#0f172a; font-weight:bold; cursor:pointer;">🔄 Recargar Modelo</button>
+
+        <div class="qr-section">
+            <p style="color: #1e293b; font-weight: bold; margin: 0 0 10px 0; font-size: 0.7rem;">ESCANEA PARA VER</p>
+            <div id="qrcode" style="display: flex; justify-content: center;"></div>
+            <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="marker-img">
         </div>
     </div>
 
-    <div id="preview-container">
-        <model-viewer id="view" src="modelo1.glb" camera-controls auto-rotate shadow-intensity="1" background-color="#111827"></model-viewer>
+    <div id="preview-zone">
+        <div id="error-msg">⚠️ No se pudo cargar modelo1.glb. Verifica el nombre.</div>
+        
+        <!-- VISOR 3D MEJORADO -->
+        <model-viewer 
+            id="visor" 
+            src="modelo1.glb" 
+            ar-status="not-presenting" 
+            camera-controls 
+            auto-rotate 
+            shadow-intensity="1" 
+            exposure="1" 
+            environment-image="neutral"
+            alt="Modelo 3D de estudiante">
+        </model-viewer>
     </div>
 
     <script>
-        var qr = new QRCode(document.getElementById("qrcode"), { width: 180, height: 180 });
+        var qr = new QRCode(document.getElementById("qrcode"), { width: 160, height: 160 });
+        const visor = document.getElementById('visor');
 
-        function updateAll() {
+        // Si hay error al cargar, mostrar mensaje
+        visor.addEventListener('error', (event) => {
+            document.getElementById('error-msg').style.display = 'block';
+            console.error("Error cargando el modelo:", event);
+        });
+
+        function actualizar() {
             let s = document.getElementById('scale').value;
             let r = document.getElementById('rotate').value;
             
             document.getElementById('scale-val').innerText = s;
-            document.getElementById('rotate-val').innerText = r + "°";
+            document.getElementById('rotate-val').innerText = r;
 
-            // Actualizar vista previa en PC
-            const mv = document.getElementById('view');
-            mv.style.transform = `scale(${s})`; // Esto es visual en PC
-
-            // Generar Link con parámetros para el celular
-            let dir = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-            let finalUrl = dir + "/ar.html?s=" + s + "&r=" + r;
+            // Actualizar el QR con los parámetros
+            let baseUrl = window.location.href.split('index.html')[0].split('?')[0];
+            if (!baseUrl.endsWith('/')) baseUrl += '/';
+            let finalUrl = baseUrl + "ar.html?s=" + s + "&r=" + r;
             
             qr.clear();
             qr.makeCode(finalUrl);
         }
 
-        window.onload = updateAll;
+        // Ejecutar al inicio
+        window.onload = actualizar;
     </script>
 </body>
 </html>
