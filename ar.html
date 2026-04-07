@@ -39,5 +39,16 @@
         el.setAttribute('scale', `${s} ${s} ${s}`);
         el.setAttribute('rotation', `0 ${r} 0`);
     </script>
+
+    <script>
+    const params = new URLSearchParams(window.location.search);
+    const s = params.get('s') || "1";
+    const r = params.get('r') || "0";
+
+    const modelo = document.querySelector('a-entity[gltf-model]');
+    // Aplicamos escala y rotación (convertimos r a grados)
+    modelo.setAttribute('scale', `${s} ${s} ${s}`);
+    modelo.setAttribute('rotation', `0 ${r} 0`);
+    </script>
 </body>
 </html>
