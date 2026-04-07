@@ -15,40 +15,30 @@
         
         <a-assets>
             <a-asset-item id="modelo" src="modelo1.glb"></a-asset-item>
-        </assets>
+        </a-assets>
 
-        <!-- Agregamos luces para que el modelo se vea bien -->
-        <a-entity light="type: ambient; intensity: 1;"></a-entity>
-        <a-entity light="type: directional; intensity: 0.8;" position="1 1 1"></a-entity>
+        <!-- Luces potentes para ver el mBot -->
+        <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
+        <a-entity light="type: directional; intensity: 1; position: 1 2 1"></a-entity>
 
         <a-marker preset="hiro">
-            <a-entity id="entidad" gltf-model="#modelo" position="0 0 0" rotation="0 0 0" scale="1 1 1"></a-entity>
+            <a-entity id="entidad" gltf-model="#modelo" position="0 0 0" scale="1 1 1"></a-entity>
         </a-marker>
 
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        // Leer parámetros de la URL (?s=1.5&r=90)
         const params = new URLSearchParams(window.location.search);
         const s = params.get('s') || "1";
-        const r = params.get('r') || "0";
+        const h = params.get('h') || "0";
+        const v = params.get('v') || "0";
 
-        // Aplicar escala y rotación al modelo antes de mostrarlo
         const el = document.getElementById('entidad');
+        // Aplicamos escala y la rotación en los dos ejes
+        // En A-Frame la rotación vertical es el primer número
         el.setAttribute('scale', `${s} ${s} ${s}`);
-        el.setAttribute('rotation', `0 ${r} 0`);
-    </script>
-
-    <script>
-    const params = new URLSearchParams(window.location.search);
-    const s = params.get('s') || "1";
-    const r = params.get('r') || "0";
-
-    const modelo = document.querySelector('a-entity[gltf-model]');
-    // Aplicamos escala y rotación (convertimos r a grados)
-    modelo.setAttribute('scale', `${s} ${s} ${s}`);
-    modelo.setAttribute('rotation', `0 ${r} 0`);
+        el.setAttribute('rotation', `${v} ${h} 0`);
     </script>
 </body>
 </html>
