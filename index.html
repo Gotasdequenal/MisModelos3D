@@ -3,92 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estación de Realidad Aumentada</title>
-    
-    <!-- Librerías Necesarias -->
+    <title>Estación AR Profesional</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
-        body { 
-            margin: 0; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #0f172a; 
-            color: white; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            height: 100vh; 
-            overflow: hidden;
-        }
-
-        /* Vista de Computadora (Escritorio) */
-        #pc-view { display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .qr-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        h1 { margin-bottom: 10px; color: #38bdf8; }
-        p { margin-bottom: 20px; font-size: 1.1rem; color: #94a3b8; }
-
-        /* Vista de Celular (Modelo 3D) */
+        body { margin: 0; font-family: sans-serif; background-color: #0f172a; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        #pc-view { text-align: center; }
+        .qr-card { background: white; padding: 20px; border-radius: 20px; }
         #mobile-view { display: none; width: 100vw; height: 100vh; }
-        model-viewer { width: 100%; height: 100%; background-color: #0f172a; }
-
-        .btn-ar {
-            position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%);
-            padding: 15px 30px; background: #38bdf8; color: #0f172a;
-            border: none; border-radius: 50px; font-weight: bold; font-size: 1rem;
-            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4); cursor: pointer;
-        }
+        model-viewer { width: 100%; height: 100%; }
+        
+        /* Barra de carga para saber que está pasando */
+        #progress-bar { width: 100%; height: 5px; background: rgba(255,255,255,0.1); position: absolute; top: 0; }
+        #update-bar { width: 0%; height: 100%; background: #38bdf8; transition: width 0.3s; }
     </style>
 </head>
 <body>
 
-    <!-- VISTA PARA LA PANTALLA DE CLASE -->
     <div id="pc-view">
-        <h1>SALA DE REALIDAD AUMENTADA</h1>
-        <p>Asegúrate de que el archivo se llame <b>modelo1.glb</b></p>
-        <div class="qr-card">
-            <div id="qrcode"></div>
-        </div>
-        <p style="margin-top: 20px;">Escanea con tu teléfono para ver el diseño</p>
+        <h1>SALA AR: ESCANEA AQUÍ</h1>
+        <div class="qr-card"><div id="qrcode"></div></div>
+        <p>Asegúrate de que el archivo en GitHub sea <b>modelo1.glb</b></p>
     </div>
 
-    <!-- VISTA PARA EL TELÉFONO DEL ESTUDIANTE -->
     <div id="mobile-view">
-        <model-viewer 
-            id="viewer" 
-            src="modelo1.glb" 
-            ar 
-            ar-modes="webxr scene-viewer quick-look" 
-            camera-controls 
-            auto-rotate 
-            shadow-intensity="1">
-            <button slot="ar-button" class="btn-ar">
-                ✨ VER EN MI MESA
+        <div id="progress-bar"><div id="update-bar"></div></div>
+        <model-viewer id="viewer" src="modelo1.glb" ar ar-modes="webxr scene-viewer quick-look" camera-controls auto-rotate shadow-intensity="1">
+            <button slot="ar-button" style="position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); padding: 15px 30px; background: #38bdf8; border: none; border-radius: 50px; font-weight: bold;">
+                ✨ VER EN MI ESPACIO
             </button>
         </model-viewer>
     </div>
 
     <script>
-        // Detectar si es celular o si viene de un escaneo
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         const urlParams = new URLSearchParams(window.location.search);
-        const mode = urlParams.get('mode');
 
-        if (isMobile || mode === 'ar') {
-            // Mostrar visor 3D
+        if (isMobile || urlParams.get('mode') === 'ar') {
             document.getElementById('pc-view').style.display = 'none';
             document.getElementById('mobile-view').style.display = 'block';
+            
+            // Lógica de la barra de carga
+            const modelViewer = document.querySelector('#viewer');
+            const updateBar = document.querySelector('#update-bar');
+            modelViewer.addEventListener('progress', (event) => {
+                updateBar.style.width = `${event.detail.totalProgress * 100}%`;
+                if (event.detail.totalProgress === 1) {
+                   document.querySelector('#progress-bar').style.display = 'none';
+                }
+            });
         } else {
-            // Mostrar QR para la clase
-            const currentUrl = window.location.href + "?mode=ar";
             new QRCode(document.getElementById("qrcode"), {
-                text: currentUrl,
-                width: 250,
-                height: 250,
-                colorDark : "#0f172a",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
+                text: window.location.href + "?mode=ar",
+                width: 250, height: 250
             });
         }
     </script>
