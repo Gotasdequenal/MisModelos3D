@@ -3,132 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <title>Visualizador de modelo 3D para realidad aumentada</title>
-    <!-- Motor de Alta Fidelidad de Google -->
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <!-- Motores 3D y Controles -->
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-orbit-controls@1.3.2/dist/aframe-orbit-controls.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; height: 100vh; overflow: hidden; }
         
-        /* BARRA LATERAL IZQUIERDA (CÁMARA/ENTORNO) */
-        #sidebar-left { width: 280px; background: #1e293b; padding: 20px; border-right: 1px solid #334155; display: flex; flex-direction: column; gap: 15px; z-index: 100; }
-        .control-group { background: #334155; padding: 12px; border-radius: 12px; }
-        label { display: block; font-size: 0.7rem; color: #38bdf8; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; }
+        /* BARRA IZQUIERDA: CÁMARA */
+        #sidebar-left { width: 300px; background: #1e293b; padding: 20px; border-right: 2px solid #334155; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
+        .control-group { background: #334155; padding: 12px; border-radius: 12px; border: 1px solid #475569; }
+        label { display: block; font-size: 0.65rem; color: #38bdf8; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
         input[type="range"] { width: 100%; cursor: pointer; accent-color: #38bdf8; }
 
-        /* VISOR CENTRAL */
-        #preview-zone { flex-grow: 1; position: relative; background: radial-gradient(circle, #233142 0%, #0f172a 100%); }
-        model-viewer { width: 100%; height: 100%; --poster-color: transparent; }
-
-        /* BASE HIRO EN EL VISOR */
-        #stage-ref { position: absolute; bottom: 15%; left: 50%; transform: translateX(-50%) rotateX(70deg); width: 250px; height: 250px; border: 15px solid black; background: white; display: flex; align-items: center; justify-content: center; pointer-events: none; opacity: 0.8; z-index: 1; }
-        #stage-ref img { width: 70%; transform: rotateX(-10deg); }
-
-        /* BARRA DE ESCALA DERECHA (VERTICAL) */
-        #sidebar-right { width: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #1e293b; border-left: 1px solid #334155; padding: 10px; z-index: 100; }
-        .vertical-slider { appearance: slider-vertical; width: 10px; height: 300px; cursor: pointer; accent-color: #ef4444; }
+        /* BARRA DERECHA: ESCALA */
+        #sidebar-right { width: 100px; background: #1e293b; border-left: 2px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; position: relative; }
+        .scale-label { writing-mode: vertical-rl; text-orientation: mixed; margin-bottom: 20px; color: #38bdf8; font-weight: bold; letter-spacing: 2px; }
+        .vertical-slider { appearance: slider-vertical; width: 8px; height: 350px; background: #475569; outline: none; }
+        
+        /* ZONA CENTRAL */
+        #preview-zone { flex-grow: 1; position: relative; background: #000; }
+        .mouse-hint { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 5px; font-size: 10px; color: #94a3b8; pointer-events: none; z-index: 10; }
 
         /* BOTONES ZOOM */
-        .zoom-controls { position: absolute; bottom: 120px; right: 100px; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
-        .btn-zoom { width: 50px; height: 50px; border-radius: 10px; border: none; background: #334155; color: white; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .btn-zoom:hover { background: #38bdf8; color: #0f172a; }
+        .zoom-ui { position: absolute; right: 20px; bottom: 120px; display: flex; flex-direction: column; gap: 10px; }
+        .btn-zoom { width: 45px; height: 45px; border-radius: 10px; border: none; background: #334155; color: white; font-size: 20px; cursor: pointer; border-bottom: 3px solid #1e293b; }
+        .btn-zoom:hover { background: #38bdf8; }
 
-        /* BOTÓN GENERAR QR (ESTILO 86 MEJORADO) */
-        .button-86 { all: unset; width: 220px; height: 40px; font-size: 14px; background: transparent; border: none; position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); color: #f0f0f0; cursor: pointer; z-index: 100; padding: 10px 20px; display: flex; align-items: center; justify-content: center; white-space: nowrap; font-weight: bold; }
-        .button-86::before { content: ''; position: absolute; bottom: 0; right: 0; z-index: -1; transition: all .4s; transform: translate(0%, 0%); width: 100%; height: 100%; background: #0ea5e9; border-radius: 10px; }
+        /* BOTÓN 86 */
+        .button-86 { all: unset; width: 220px; height: 40px; font-size: 14px; background: transparent; border: none; position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); color: white; cursor: pointer; z-index: 100; padding: 10px 20px; display: flex; align-items: center; justify-content: center; white-space: nowrap; font-weight: bold; }
+        .button-86::before { content: ''; position: absolute; bottom: 0; right: 0; z-index: -1; transition: all .4s; width: 100%; height: 100%; background: #0ea5e9; border-radius: 10px; }
         .button-86::after { content: ''; position: absolute; bottom: 0; right: 0; z-index: -1; transition: all .4s; transform: translate(10px, 10px); width: 35px; height: 35px; background: #ffffff20; backdrop-filter: blur(5px); border-radius: 50px; }
         .button-86:hover::before { background: #38bdf8; width: 105%; height: 105%; }
 
-        /* PANTALLA PRESENTACIÓN */
+        /* PRESENTACIÓN */
         #presentation-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; color: black; z-index: 1000; flex-direction: row; align-items: center; justify-content: center; gap: 80px; }
-        .hiro-img { border: 40px solid black; width: 300px; height: 300px; }
     </style>
 </head>
 <body>
 
-    <!-- BARRA IZQUIERDA -->
+    <!-- IZQUIERDA -->
     <div id="sidebar-left">
         <h2 style="color: #38bdf8; text-align: center; margin: 0; font-size: 0.9rem;">VISUALIZADOR AR</h2>
         <div class="control-group">
             <label>ÓRBITA CÁMARA (V)</label>
-            <input type="range" id="camV" min="0" max="180" value="75" oninput="actualizarCamara()">
+            <input type="range" id="camV" min="0" max="180" value="70" oninput="actualizarCamara()">
             <label>ÓRBITA CÁMARA (H)</label>
             <input type="range" id="camH" min="-180" max="180" value="0" oninput="actualizarCamara()">
         </div>
-        <p style="font-size: 10px; color: #94a3b8; text-align: center;">
-            🖱️ Izquierdo: Rotar | 🖱️ Derecho: Arrastrar | ⚙️ Rueda: Zoom
-        </p>
+        <p style="font-size: 9px; color: #94a3b8; text-align: center; margin-top: 10px;">Los sliders mueven la CÁMARA alrededor del robot.</p>
     </div>
 
-    <!-- ZONA CENTRAL -->
+    <!-- CENTRO -->
     <div id="preview-zone">
-        <div id="stage-ref"><img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg"></div>
-        <model-viewer 
-            id="visor" 
-            src="modelo1.glb" 
-            camera-controls 
-            enable-pan
-            environment-image="neutral" 
-            shadow-intensity="1" 
-            exposure="1.5"
-            camera-orbit="0deg 75deg 5m">
-        </model-viewer>
+        <div class="mouse-hint">🖱️ Izquierdo: Orbitar | 🖱️ Derecho: Desplazar | ⚙️ Rueda: Zoom</div>
+        
+        <a-scene embedded vr-mode-ui="enabled: false" renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true;">
+            <a-assets><a-asset-item id="modelo" src="modelo1.glb"></a-asset-item></a-assets>
+            <a-sky color="#0f172a"></a-sky>
+            
+            <!-- LUCES CALIDAD ESTUDIO (PBR) -->
+            <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
+            <a-entity light="type: directional; intensity: 1.8; position: 2 4 3;"></a-entity>
+            <a-entity light="type: point; intensity: 1.2; position: -2 3 -2;"></a-entity>
+            <a-entity light="type: hemisphere; color: #ffffff; groundColor: #0f172a; intensity: 1;"></a-entity>
+
+            <!-- GRILLA Y EJES -->
+            <a-entity position="0 0 0">
+                <a-grid width="10" height="10" color="#444" opacity="0.3"></a-grid>
+                <!-- Eje X (Rojo) -->
+                <a-entity line="start: -10 0.01 0; end: 10 0.01 0; color: #ef4444"></a-entity>
+                <!-- Eje Z (Azul) -->
+                <a-entity line="start: 0 0.01 -10; end: 0 0.01 10; color: #3b82f6"></a-entity>
+                <!-- Eje Y (Verde - Vertical) -->
+                <a-entity line="start: 0 0 0; end: 0 10 0; color: #22c55e"></a-entity>
+            </a-entity>
+
+            <!-- BASE HIRO (Referencia en el suelo) -->
+            <a-plane position="0 0.02 0" rotation="-90 0 0" width="1.5" height="1.5" src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg"></a-plane>
+
+            <!-- EL ROBOT -->
+            <a-entity id="robot" gltf-model="#modelo" position="0 0 0"></a-entity>
+            
+            <!-- CÁMARA (Con Orbit Controls) -->
+            <a-entity id="camera-rig" position="0 0.5 0">
+                <a-entity id="main-camera" camera orbit-controls="target: 0 0.5 0; initialPosition: 0 1.5 4; minDistance: 0.5; maxDistance: 15;"></a-entity>
+            </a-entity>
+        </a-scene>
         
         <button class="button-86" onclick="mostrarPresentacion()">GENERAR CÓDIGO QR</button>
     </div>
 
-    <!-- BARRA DERECHA -->
+    <!-- DERECHA -->
     <div id="sidebar-right">
-        <label style="writing-mode: vertical-rl; margin-bottom: 10px;">ESCALA</label>
-        <input type="range" id="scale" class="vertical-slider" min="0.1" max="10" step="0.1" value="1">
-        <span id="scale-val" style="margin-top:10px">1.0</span>
+        <div class="scale-label">ESCALA DEL ROBOT</div>
+        <input type="range" id="scale" class="vertical-slider" min="0.1" max="15" step="0.1" value="1" oninput="actualizarEscala()">
+        <div id="scale-val" style="margin-top: 15px; font-weight: bold;">1.0x</div>
+        
+        <div class="zoom-ui">
+            <button class="btn-zoom" onclick="zoomCam(0.9)">+</button>
+            <button class="btn-zoom" onclick="zoomCam(1.1)">-</button>
+        </div>
     </div>
 
-    <!-- BOTONES ZOOM -->
-    <div class="zoom-controls">
-        <button class="btn-zoom" onclick="zoom(0.8)">+</button>
-        <button class="btn-zoom" onclick="zoom(1.2)">-</button>
-    </div>
-
-    <!-- PANTALLA HIRO + QR -->
+    <!-- PANTALLA PRESENTACIÓN -->
     <div id="presentation-view">
-        <button onclick="document.getElementById('presentation-view').style.display='none'" style="position:absolute; top:20px; left:20px; padding:10px; cursor:pointer; border-radius:20px;">Cerrar</button>
+        <button onclick="document.getElementById('presentation-view').style.display='none'" style="position:absolute; top:20px; left:20px; padding:10px; cursor:pointer;">Cerrar</button>
         <div style="text-align:center">
             <h3>1. ESCANEA EL QR</h3>
             <div id="qrcode"></div>
         </div>
         <div style="text-align:center">
-            <h3>2. APUNTA AQUÍ</h3>
-            <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="hiro-img">
+            <h3>2. APUNTA AL MARCADOR</h3>
+            <div style="border: 40px solid black; padding: 10px;">
+                <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" width="280">
+            </div>
         </div>
     </div>
 
     <script>
-        var qr = new QRCode(document.getElementById("qrcode"), { width: 320, height: 320 });
-        const visor = document.getElementById('visor');
+        var qr = new QRCode(document.getElementById("qrcode"), { width: 350, height: 350 });
+        
+        function actualizarEscala() {
+            const s = document.getElementById('scale').value;
+            document.getElementById('scale-val').innerText = s + "x";
+            const robot = document.getElementById('robot');
+            robot.setAttribute('scale', `${s} ${s} ${s}`);
+        }
 
         function actualizarCamara() {
             const h = document.getElementById('camH').value;
             const v = document.getElementById('camV').value;
-            visor.cameraOrbit = `${h}deg ${v}deg auto`;
+            // Acceder a la cámara de orbit-controls para forzar posición
+            const cam = document.getElementById('main-camera');
+            // Esto es un comando de orbit-controls para girar el entorno
+            cam.setAttribute('orbit-controls', 'initialPosition', `0 ${v/40} 4`);
         }
 
-        function zoom(factor) {
-            visor.zoom(factor);
+        function zoomCam(delta) {
+            const cam = document.getElementById('main-camera');
+            const current = cam.getAttribute('position');
+            cam.setAttribute('position', {x: current.x, y: current.y, z: current.z * delta});
         }
 
         function mostrarPresentacion() {
             const s = document.getElementById('scale').value;
             let baseUrl = window.location.href.split('index.html')[0].split('?')[0];
             if (!baseUrl.endsWith('/')) baseUrl += '/';
-            // Pasamos la escala al celular (Sincronizada)
             let finalUrl = `${baseUrl}ar.html?s=${s}`;
             qr.clear(); qr.makeCode(finalUrl);
             document.getElementById('presentation-view').style.display = 'flex';
         }
-
-        document.getElementById('scale').oninput = function() {
-            document.getElementById('scale-val').innerText = this.value;
-        };
     </script>
 </body>
 </html>
