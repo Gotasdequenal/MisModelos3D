@@ -7,7 +7,7 @@
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
-        #arjs-video { width: 100vw !important; height: 100vh !important; object-fit: cover !important; position: fixed !important; top: 0; left: 0; }
+        #arjs-video { width: 100vw !important; height: 100vh !important; object-fit: cover !important; position: fixed !important; top: 0; left: 0; z-index: -1; }
     </style>
 </head>
 <body style="margin: 0; background: transparent;">
@@ -15,16 +15,17 @@
         <a-assets><a-asset-item id="modelo" src="modelo1.glb"></a-asset-item></a-assets>
         <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
         <a-entity light="type: directional; intensity: 1; position: 1 2 1"></a-entity>
+        
         <a-marker preset="hiro">
-            <a-entity id="entidad" gltf-model="#modelo" position="0 0 0" rotation="0 0 0" scale="1 1 1"></a-entity>
+            <!-- Aquí el robot recibirá la posición exacta de las flechitas de la PC -->
+            <a-entity id="entidad" gltf-model="#modelo"></a-entity>
         </a-marker>
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
         const p = new URLSearchParams(window.location.search);
-        // Ajuste de escala para el móvil (AR.js necesita valores más pequeños)
-        const s = parseFloat(p.get('s') || "1") * 0.6; 
+        const s = p.get('s') || "1";
         const rx = p.get('rx') || "0";
         const ry = p.get('ry') || "0";
         const rz = p.get('rz') || "0";
