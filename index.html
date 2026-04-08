@@ -1,158 +1,46 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Editor AR Pro v9 - Gotasdequenal</title>
-    <!-- Motor de Alta Fidelidad -->
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* BARRA LATERAL */
-        #sidebar { width: 340px; background: #1e293b; padding: 20px; border-right: 2px solid #334155; display: flex; flex-direction: column; gap: 8px; z-index: 100; overflow-y: auto; }
-        .control-group { background: #334155; padding: 12px; border-radius: 12px; border: 1px solid #475569; }
-        label { display: block; font-size: 0.65rem; color: #38bdf8; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
-        
-        input[type="range"] { width: 100%; cursor: pointer; height: 6px; border-radius: 5px; appearance: none; background: #475569; outline: none; margin-bottom: 8px; }
-        .range-x::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: #ef4444; border-radius: 50%; }
-        .range-y::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: #22c55e; border-radius: 50%; }
-        .range-z::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: #3b82f6; border-radius: 50%; }
-        
-        .btn-ar-orbe { width: 80px; height: 80px; border-radius: 50%; border: none; cursor: pointer; background: radial-gradient(circle at 30% 30%, #00f2fe, #0077be); color: white; font-weight: bold; align-self: center; margin-top: auto; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
-
-        /* ZONA DEL VISOR */
-        #preview-zone { flex-grow: 1; position: relative; background: radial-gradient(circle, #233142 0%, #0f172a 100%); display: flex; align-items: center; justify-content: center; overflow: hidden; perspective: 1000px; }
-        
-        /* ESCENARIO DE REFERENCIA (GRILLA Y EJES) */
-        #stage-container { position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-        #floor-grid { 
-            position: absolute; width: 500px; height: 500px; 
-            border: 1px solid rgba(56, 189, 248, 0.2);
-            background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
-            background-size: 20px 20px;
-            transform: rotateX(75deg) translateY(150px);
-            display: flex; align-items: center; justify-content: center;
-        }
-        .axis { position: absolute; width: 100%; height: 2px; }
-        #axis-x { background: #ef4444; width: 1000px; transform: rotateX(0deg); } /* Rojo */
-        #axis-z { background: #3b82f6; width: 1000px; transform: rotateY(90deg); } /* Azul */
-        
-        #hiro-base { width: 150px; height: 150px; border: 15px solid black; background: white; display: flex; align-items: center; justify-content: center; }
-        #hiro-base div { width: 70px; height: 70px; background: black; }
-
-        /* EL ROBOT */
-        model-viewer { width: 100%; height: 100%; z-index: 10; --poster-color: transparent; }
-
-        /* PRESENTACIÓN */
-        #presentation-view {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; color: black; z-index: 1000;
-            flex-direction: row; align-items: center; justify-content: space-around; padding: 20px;
-        }
-        .hiro-img { border: 40px solid black; width: 320px; height: 320px; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
+        #arjs-video { width: 100vw !important; height: 100vh !important; object-fit: cover !important; position: fixed !important; top: 0; left: 0; }
     </style>
 </head>
-<body>
-
-    <div id="sidebar">
-        <h2 style="color: #38bdf8; text-align: center; margin: 0; font-size: 1rem;">ESTACIÓN 3D PRO</h2>
+<body style="margin: 0; background: transparent;">
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 1280; displayHeight: 720;" vr-mode-ui="enabled: false" renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true;">
         
-        <div class="control-group">
-            <label>ESCALA: <span id="scale-val">1</span>X</label>
-            <input type="range" id="scale" min="0.1" max="10" step="0.1" value="1" oninput="actualizar()">
-        </div>
-
-        <div class="control-group">
-            <label>POSICIÓN</label>
-            <label style="color:#ef4444; font-size:8px">EJE X (HORIZONTAL)</label>
-            <input type="range" id="posX" class="range-x" min="-4" max="4" step="0.1" value="0" oninput="actualizar()">
-            <label style="color:#22c55e; font-size:8px">EJE Y (ALTURA)</label>
-            <input type="range" id="posY" class="range-y" min="-2" max="4" step="0.1" value="0" oninput="actualizar()">
-            <label style="color:#3b82f6; font-size:8px">EJE Z (PROFUNDIDAD)</label>
-            <input type="range" id="posZ" class="range-z" min="-4" max="4" step="0.1" value="0" oninput="actualizar()">
-        </div>
-
-        <div class="control-group">
-            <label>ROTACIÓN</label>
-            <label style="color:#ef4444; font-size:8px">ROTAR X</label>
-            <input type="range" id="rotX" class="range-x" min="-180" max="180" value="0" oninput="actualizar()">
-            <label style="color:#22c55e; font-size:8px">ROTAR Y</label>
-            <input type="range" id="rotY" class="range-y" min="-180" max="180" value="0" oninput="actualizar()">
-            <label style="color:#3b82f6; font-size:8px">ROTAR Z</label>
-            <input type="range" id="rotZ" class="range-z" min="-180" max="180" value="0" oninput="actualizar()">
-        </div>
-
-        <button class="btn-ar-orbe" onclick="mostrarPresentacion()">AR</button>
-    </div>
-
-    <div id="preview-zone">
-        <!-- Ejes y base de referencia detras del robot -->
-        <div id="stage-container">
-            <div id="floor-grid">
-                <div id="axis-x" class="axis"></div>
-                <div id="axis-z" class="axis" style="transform: rotate(90deg)"></div>
-                <div id="hiro-base"><div></div></div>
-            </div>
-        </div>
-
-        <model-viewer 
-            id="visor" 
-            src="modelo1.glb" 
-            camera-controls 
-            shadow-intensity="1" 
-            environment-image="neutral" 
-            exposure="1.2"
-            interaction-prompt="none">
-        </model-viewer>
-    </div>
-
-    <div id="presentation-view">
-        <button onclick="document.getElementById('presentation-view').style.display='none'" style="position:absolute; top:20px; left:20px; padding:10px; cursor:pointer; border-radius:20px;">VOLVER</button>
-        <div style="text-align:center">
-            <h2 style="margin-bottom:20px;">1. ESCANEA EL QR</h2>
-            <div id="qrcode"></div>
-        </div>
-        <div style="text-align:center">
-            <h2 style="margin-bottom:20px;">2. APUNTA AL HIRO</h2>
-            <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="hiro-img">
-        </div>
-    </div>
+        <a-assets><a-asset-item id="modelo" src="modelo1.glb"></a-asset-item></a-assets>
+        
+        <!-- Luces Súper Potentes -->
+        <a-entity light="type: ambient; intensity: 2.5;"></a-entity>
+        <a-entity light="type: directional; intensity: 2; position: 1 4 3;"></a-entity>
+        <a-entity light="type: hemisphere; intensity: 1.5; color: #fff; groundColor: #333;"></a-entity>
+        
+        <a-marker preset="hiro" smooth="true" smoothCount="5">
+            <a-entity id="entidad" gltf-model="#modelo"></a-entity>
+        </a-marker>
+        
+        <a-entity camera></a-entity>
+    </a-scene>
 
     <script>
-        var qr = new QRCode(document.getElementById("qrcode"), { width: 350, height: 350 });
-        const visor = document.getElementById('visor');
+        const p = new URLSearchParams(window.location.search);
+        const s = p.get('s') || "1";
+        const px = p.get('px') || "0";
+        const py = p.get('py') || "0";
+        const pz = p.get('pz') || "0";
+        const rx = p.get('rx') || "0";
+        const ry = p.get('ry') || "0";
+        const rz = p.get('rz') || "0";
 
-        function actualizar() {
-            const s = document.getElementById('scale').value;
-            const px = document.getElementById('posX').value;
-            const py = document.getElementById('posY').value;
-            const pz = document.getElementById('posZ').value;
-            const rx = document.getElementById('rotX').value;
-            const ry = document.getElementById('rotY').value;
-            const rz = document.getElementById('rotZ').value;
-            
-            document.getElementById('scale-val').innerText = s;
-            
-            // Sincronizar el modelo visualmente en la PC
-            visor.scale = `${s} ${s} ${s}`;
-            visor.orientation = `${rx}deg ${ry}deg ${rz}deg`;
-            // Movemos el visor físicamente para simular la posición
-            visor.style.transform = `translate(${px * 40}px, ${-py * 40}px)`;
-        }
-
-        function mostrarPresentacion() {
-            const val = (id) => document.getElementById(id).value;
-            let baseUrl = window.location.href.split('index.html')[0].split('?')[0];
-            if (!baseUrl.endsWith('/')) baseUrl += '/';
-            
-            let finalUrl = `${baseUrl}ar.html?s=${val('scale')}&px=${val('posX')}&py=${val('posY')}&pz=${val('posZ')}&rx=${val('rotX')}&ry=${val('rotY')}&rz=${val('rotZ')}`;
-            
-            qr.clear();
-            qr.makeCode(finalUrl);
-            document.getElementById('presentation-view').style.display = 'flex';
-        }
-        window.onload = actualizar;
+        const el = document.getElementById('entidad');
+        el.setAttribute('scale', `${s} ${s} ${s}`);
+        el.setAttribute('position', `${px} ${py} ${pz}`);
+        el.setAttribute('rotation', `${rx} ${ry} ${rz}`);
     </script>
 </body>
 </html>
