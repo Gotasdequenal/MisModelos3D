@@ -7,22 +7,21 @@
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
-        /* FIX TOTAL DE PANTALLA COMPLETA */
+        /* FORZAR PANTALLA COMPLETA TOTAL SIN FRANJAS */
         #arjs-video { 
             width: 100vw !important; height: 100vh !important; 
             object-fit: cover !important; position: fixed !important; 
             top: 0; left: 0; z-index: -1; margin: 0 !important;
         }
-        .a-canvas { width: 100% !important; height: 100% !important; position: fixed; top: 0; left: 0; }
     </style>
 </head>
 <body style="margin: 0; background: transparent;">
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; patternRatio: 0.5;" vr-mode-ui="enabled: false" renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true;">
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; patternRatio: 0.5;" vr-mode-ui="enabled: false" renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true; antialias: true;">
         
         <a-assets><a-asset-item id="modelo" src="modelo1.glb"></a-asset-item></a-assets>
         
-        <!-- Iluminación de Alta Fidelidad -->
-        <a-entity light="type: ambient; intensity: 2.5;"></a-entity>
+        <!-- Iluminación Extrema para detalles GLB -->
+        <a-entity light="type: ambient; intensity: 2.2;"></a-entity>
         <a-entity light="type: directional; intensity: 2; position: 1 4 3;"></a-entity>
         <a-entity light="type: hemisphere; color: #fff; groundColor: #000; intensity: 1.5;"></a-entity>
         
@@ -39,14 +38,13 @@
         el.setAttribute('position', `${p.get('px')} ${p.get('py')} ${p.get('pz')}`);
         el.setAttribute('rotation', `${p.get('rx')} ${p.get('ry')} ${p.get('rz')}`);
         
-        // Mantener el modelo aunque se pierda el marcador
         document.getElementById('marker').addEventListener('markerLost', () => { el.setAttribute('visible', 'true'); });
 
-        // Ajuste forzado de cámara para evitar franjas negras
+        // Parche de fuerza bruta para ajustar el video al 100% de la pantalla
         setInterval(() => {
             const video = document.querySelector('#arjs-video');
             if (video) { video.style.width = window.innerWidth + 'px'; video.style.height = window.innerHeight + 'px'; }
-        }, 1000);
+        }, 500);
     </script>
 </body>
 </html>
