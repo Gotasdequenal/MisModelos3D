@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Visualizador de modelo 3D para realidad aumentada</title>
-    <!-- Cargamos Three.js (Motor Pro) -->
     <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
     <script type="importmap">
     {
@@ -17,56 +16,59 @@
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0b0f1a; color: white; display: flex; height: 100vh; overflow: hidden; }
         
-        /* IZQUIERDA: ZOOM */
-        #sidebar-left { width: 80px; background: #1e293b; border-right: 1px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; z-index: 100; }
-        .btn-zoom { width: 50px; height: 50px; border-radius: 12px; border: none; background: #334155; color: white; font-size: 24px; cursor: pointer; border-bottom: 4px solid #0f172a; }
-        .btn-zoom:hover { background: #38bdf8; }
+        /* IZQUIERDA: ALTURA */
+        #sidebar-left { width: 80px; background: #1e293b; border-right: 1px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; z-index: 100; }
+        .btn-height { width: 55px; height: 55px; border-radius: 12px; border: none; background: #22c55e; color: white; font-size: 20px; cursor: pointer; border-bottom: 4px solid #14532d; font-weight: bold; }
+        .btn-height:active { border-bottom: none; transform: translateY(2px); }
 
         /* DERECHA: ESCALA */
         #sidebar-right { width: 100px; background: #1e293b; border-left: 1px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
         .vertical-slider { appearance: slider-vertical; width: 8px; height: 300px; background: #475569; outline: none; cursor: pointer; }
-        .scale-txt { margin-top: 15px; font-weight: bold; color: #38bdf8; font-size: 14px; }
+        .scale-txt { margin-top: 15px; font-weight: bold; color: #ef4444; font-size: 14px; }
 
-        /* CENTRO: VISOR */
-        #container3d { flex-grow: 1; position: relative; cursor: crosshair; }
-        
-        /* BOTÓN 86 AZUL */
+        /* VISOR */
+        #container3d { flex-grow: 1; position: relative; }
+        .hint { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 5px; font-size: 10px; color: #94a3b8; pointer-events: none; }
+
+        /* BOTÓN 86 */
         .button-86 { all: unset; width: 220px; height: 45px; font-size: 14px; background: transparent; border: none; position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); color: white; cursor: pointer; z-index: 100; padding: 10px 20px; display: flex; align-items: center; justify-content: center; white-space: nowrap; font-weight: bold; }
         .button-86::before { content: ''; position: absolute; bottom: 0; right: 0; z-index: -1; transition: all .4s; width: 100%; height: 100%; background: #0ea5e9; border-radius: 10px; }
         .button-86::after { content: ''; position: absolute; bottom: 0; right: 0; z-index: -1; transition: all .4s; transform: translate(10px, 10px); width: 35px; height: 35px; background: #ffffff20; backdrop-filter: blur(5px); border-radius: 50px; }
         .button-86:hover::before { background: #38bdf8; }
 
-        /* PRESENTACIÓN */
         #presentation-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; color: black; z-index: 1000; flex-direction: row; align-items: center; justify-content: center; gap: 60px; }
-        .hiro-marker { border: 40px solid black; padding: 10px; width: 300px; height: 300px; }
+        .hiro-marker { border: 45px solid black; padding: 10px; width: 280px; height: 280px; }
     </style>
 </head>
 <body>
 
     <div id="sidebar-left">
-        <button class="btn-zoom" id="zoomIn">+</button>
-        <button class="btn-zoom" id="zoomOut">-</button>
-        <span style="font-size: 10px; color: #94a3b8;">ZOOM</span>
+        <span style="font-size: 10px; color: #22c55e; font-weight: bold;">SUBIR</span>
+        <button class="btn-height" id="btnUp">▲</button>
+        <button class="btn-height" id="btnDown" style="background: #ef4444; border-bottom-color: #7f1d1d;">▼</button>
+        <span style="font-size: 10px; color: #ef4444; font-weight: bold;">BAJAR</span>
     </div>
 
-    <div id="container3d"></div>
+    <div id="container3d">
+        <div class="hint">🖱️ Izq: Rotar | 🖱️ Der: Mover X-Z | ⚙️ Rueda: Zoom</div>
+    </div>
 
     <div id="sidebar-right">
-        <span style="writing-mode: vertical-rl; margin-bottom: 10px; font-size: 12px; color: #38bdf8;">ESCALA</span>
-        <input type="range" id="scaleInput" class="vertical-slider" min="0.1" max="15" step="0.1" value="1">
+        <span style="writing-mode: vertical-rl; margin-bottom: 10px; font-size: 12px; color: #38bdf8; font-weight: bold;">ESCALA MBOT</span>
+        <input type="range" id="scaleInput" class="vertical-slider" min="0.1" max="10" step="0.1" value="1">
         <div id="scale-val" class="scale-txt">1.0x</div>
     </div>
 
     <button class="button-86" id="generateBtn">GENERAR CÓDIGO QR</button>
 
     <div id="presentation-view">
-        <button id="closeBtn" style="position:absolute; top:20px; left:20px; padding:10px; cursor:pointer;">Cerrar</button>
+        <button id="closeBtn" style="position:absolute; top:20px; left:20px; padding:10px; border-radius: 10px; cursor:pointer;">← Volver</button>
         <div style="text-align:center">
             <h3>1. ESCANEA EL QR</h3>
             <div id="qrcode"></div>
         </div>
         <div style="text-align:center">
-            <h3>2. APUNTA AL HIRO</h3>
+            <h3>2. APUNTA AL MARCADOR</h3>
             <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="hiro-marker">
         </div>
     </div>
@@ -79,15 +81,13 @@
         let scene, camera, renderer, controls, robot, marker;
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
-        let isDraggingModel = false;
-        let isRotatingModel = false;
+        let isDraggingModel = false, isRotatingModel = false;
 
         init();
 
         function init() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0f172a);
-
             camera = new THREE.PerspectiveCamera(45, (window.innerWidth - 180) / window.innerHeight, 0.1, 1000);
             camera.position.set(0, 2, 5);
 
@@ -96,50 +96,45 @@
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.outputColorSpace = THREE.SRGBColorSpace;
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.2;
+            renderer.toneMappingExposure = 1.3;
             document.getElementById('container3d').appendChild(renderer.domElement);
 
-            // LUCES CALIDAD PBR
-            const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+            const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
             scene.add(ambientLight);
-            const sunLight = new THREE.DirectionalLight(0xffffff, 2);
-            sunLight.position.set(5, 10, 7.5);
-            scene.add(sunLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+            directionalLight.position.set(5, 10, 7.5);
+            scene.add(directionalLight);
 
-            // GRID Y EJES
             const grid = new THREE.GridHelper(10, 20, 0x444444, 0x222222);
             scene.add(grid);
-            const axes = new THREE.AxesHelper(5);
-            scene.add(axes);
+            
+            // EJES PRO: Rojo(X), Verde(Y), Azul(Z)
+            const axesHelper = new THREE.AxesHelper(5);
+            scene.add(axesHelper);
 
-            // MARCADOR HIRO BASE
-            const loaderImg = new THREE.TextureLoader();
-            loaderImg.load('https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg', (txt) => {
+            // MARCADOR HIRO
+            new THREE.TextureLoader().load('https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg', (txt) => {
                 const geo = new THREE.PlaneGeometry(2, 2);
-                const mat = new THREE.MeshBasicMaterial({ map: txt });
-                marker = new THREE.Mesh(geo, mat);
+                marker = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: txt }));
                 marker.rotation.x = -Math.PI / 2;
-                marker.position.y = 0.01;
+                marker.position.y = 0.005;
                 scene.add(marker);
             });
 
-            // CARGAR MBOT
-            const gltfLoader = new GLTFLoader();
-            gltfLoader.load('modelo1.glb', (gltf) => {
+            const loader = new GLTFLoader();
+            loader.load('modelo1.glb', (gltf) => {
                 robot = gltf.scene;
+                robot.position.set(0, 0, 0);
                 scene.add(robot);
             });
 
-            // CONTROLES DE CÁMARA (BACKGROUND)
             controls = new OrbitControls(camera, renderer.domElement);
             controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
 
-            // EVENTOS MOUSE
             window.addEventListener('mousedown', onMouseDown);
             window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mouseup', onMouseUp);
+            window.addEventListener('mouseup', () => { controls.enabled = true; isDraggingModel = isRotatingModel = false; });
             window.addEventListener('resize', onWindowResize);
-
             animate();
         }
 
@@ -147,36 +142,22 @@
             mouse.x = ((e.clientX - 80) / (window.innerWidth - 180)) * 2 - 1;
             mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObject(robot, true);
-
-            if (intersects.length > 0) {
-                controls.enabled = false; // Bloquea cámara
-                if (e.button === 0) isRotatingModel = true;
-                if (e.button === 2) isDraggingModel = true;
+            if(robot) {
+                const intersects = raycaster.intersectObject(robot, true);
+                if (intersects.length > 0) {
+                    controls.enabled = false;
+                    if (e.button === 0) isRotatingModel = true;
+                    if (e.button === 2) isDraggingModel = true;
+                }
             }
         }
 
         function onMouseMove(e) {
-            if (isRotatingModel) {
-                robot.rotation.y += e.movementX * 0.01;
-                robot.rotation.x += e.movementY * 0.01;
-            }
-            if (isDraggingModel) {
-                robot.position.x += e.movementX * 0.01;
-                robot.position.z += e.movementY * 0.01;
-            }
+            if (isRotatingModel) { robot.rotation.y += e.movementX * 0.01; robot.rotation.x += e.movementY * 0.01; }
+            if (isDraggingModel) { robot.position.x += e.movementX * 0.01; robot.position.z += e.movementY * 0.01; }
         }
 
-        function onMouseUp() {
-            controls.enabled = true;
-            isDraggingModel = false;
-            isRotatingModel = false;
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            renderer.render(scene, camera);
-        }
+        function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
 
         function onWindowResize() {
             camera.aspect = (window.innerWidth - 180) / window.innerHeight;
@@ -184,34 +165,28 @@
             renderer.setSize(window.innerWidth - 180, window.innerHeight);
         }
 
-        // UI ACTIONS
+        // ACCIONES
         document.getElementById('scaleInput').oninput = function() {
             const s = this.value;
             document.getElementById('scale-val').innerText = s + "x";
-            robot.scale.set(s, s, s);
+            if(robot) robot.scale.set(s, s, s);
         };
 
-        document.getElementById('zoomIn').onclick = () => camera.position.z -= 0.5;
-        document.getElementById('zoomOut').onclick = () => camera.position.z += 0.5;
+        // MOVIMIENTO EN EJE VERDE (ALTURA)
+        document.getElementById('btnUp').onclick = () => { if(robot) robot.position.y += 0.1; };
+        document.getElementById('btnDown').onclick = () => { if(robot) robot.position.y -= 0.1; };
 
         document.getElementById('generateBtn').onclick = () => {
             const s = document.getElementById('scaleInput').value;
-            const px = robot.position.x.toFixed(2);
-            const py = robot.position.y.toFixed(2);
-            const pz = robot.position.z.toFixed(2);
-            const rx = THREE.MathUtils.radToDeg(robot.rotation.x).toFixed(0);
-            const ry = THREE.MathUtils.radToDeg(robot.rotation.y).toFixed(0);
-            const rz = THREE.MathUtils.radToDeg(robot.rotation.z).toFixed(0);
-
+            const px = robot.position.x.toFixed(2), py = robot.position.y.toFixed(2), pz = robot.position.z.toFixed(2);
+            const rx = THREE.MathUtils.radToDeg(robot.rotation.x), ry = THREE.MathUtils.radToDeg(robot.rotation.y), rz = THREE.MathUtils.radToDeg(robot.rotation.z);
             let baseUrl = window.location.href.split('index.html')[0].split('?')[0];
             if (!baseUrl.endsWith('/')) baseUrl += '/';
             let finalUrl = `${baseUrl}ar.html?s=${s}&px=${px}&py=${py}&pz=${pz}&rx=${rx}&ry=${ry}&rz=${rz}`;
-            
             document.getElementById('qrcode').innerHTML = "";
-            new QRCode(document.getElementById("qrcode"), { text: finalUrl, width: 300, height: 300 });
+            new QRCode(document.getElementById("qrcode"), { text: finalUrl, width: 280, height: 280 });
             document.getElementById('presentation-view').style.display = 'flex';
         };
-
         document.getElementById('closeBtn').onclick = () => document.getElementById('presentation-view').style.display = 'none';
     </script>
 </body>
