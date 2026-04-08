@@ -6,18 +6,26 @@
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
-        #arjs-video { width: 100vw !important; height: 100vh !important; object-fit: cover !important; position: fixed !important; top: 0; left: 0; z-index: -1; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
+        /* FORZAR CÁMARA A TODA LA PANTALLA Y OCULTAR INTERFAZ SOBRANTE */
+        #arjs-video { 
+            width: 100vw !important; height: 100vh !important; 
+            object-fit: cover !important; margin: 0 !important; 
+            position: fixed !important; top: 0; left: 0;
+        }
+        .a-canvas { width: 100% !important; height: 100% !important; top: 0; left: 0; }
+        .a-loader-title { display: none !important; }
     </style>
 </head>
-<body style="margin: 0; background: transparent;">
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false" renderer="alpha: true;">
+<body>
+    <!--patternRatio: 0.5 ayuda a detectar mejor el cuadro negro -->
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; patternRatio: 0.5; trackingMethod: best;" vr-mode-ui="enabled: false">
         <a-assets><a-asset-item id="modelo" src="modelo1.glb"></a-asset-item></a-assets>
+        
         <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
         <a-entity light="type: directional; intensity: 1; position: 1 2 1"></a-entity>
-        
-        <a-marker preset="hiro">
-            <!-- Aquí el robot recibirá la posición exacta de las flechitas de la PC -->
+
+        <a-marker preset="hiro" smooth="true" smoothCount="5">
             <a-entity id="entidad" gltf-model="#modelo"></a-entity>
         </a-marker>
         <a-entity camera></a-entity>
