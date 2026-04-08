@@ -3,28 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visor Realidad Aumentada</title>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
-        body, html { margin: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
-        model-viewer { width: 100%; height: 100%; }
-        .ar-btn { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 18px 35px; background: #00d1ff; color: white; border: none; border-radius: 50px; font-weight: bold; z-index: 100; box-shadow: 0 5px 20px rgba(0,209,255,0.5); font-size: 1rem; }
+        body, html { margin: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
+        #arjs-video { width: 100vw !important; height: 100vh !important; object-fit: cover !important; position: fixed !important; top: 0; left: 0; z-index: -1; }
     </style>
 </head>
-<body>
-    <model-viewer id="ar-visor" src="" ar ar-modes="webxr scene-viewer quick-look" camera-controls shadow-intensity="1" environment-image="neutral" exposure="1.2">
-        <button slot="ar-button" class="ar-btn">✨ VER EN MI ESPACIO</button>
-    </model-viewer>
-
+<body style="margin: 0; background: transparent;">
+    <!-- Activamos renderer de alta calidad -->
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; patternRatio: 0.5;" vr-mode-ui="enabled: false" renderer="colorManagement: true; physicallyCorrectLights: true; exposure: 1.5; antialias: true;">
+        
+        <a-assets><a-asset-item id="modelo" src=""></a-asset-item></a-assets>
+        
+        <!-- TRIPLE ILUMINACIÓN PARA DETALLES MÁXIMOS -->
+        <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
+        <a-entity light="type: directional; intensity: 2; position: 1 5 3;"></a-entity>
+        <a-entity light="type: directional; intensity: 1; position: -2 3 -1;"></a-entity>
+        <a-entity light="type: hemisphere; color: #fff; groundColor: #000; intensity: 1;"></a-entity>
+        
+        <a-marker preset="hiro" id="marker" emitevents="true">
+            <a-entity id="entidad" gltf-model="#modelo"></a-entity>
+        </a-marker>
+        <a-entity camera></a-entity>
+    </a-scene>
     <script>
         const p = new URLSearchParams(window.location.search);
-        const m = p.get('model');
-        const s = p.get('s') || "1";
-        if(m) {
-            const v = document.getElementById('ar-visor');
-            v.src = decodeURIComponent(m);
-            v.scale = `${s} ${s} ${s}`;
+        const modelUrl = p.get('model');
+        const s = parseFloat(p.get('s') || "1") * 0.45; 
+        
+        if(modelUrl) {
+            const el = document.getElementById('entidad');
+            el.setAttribute('gltf-model', decodeURIComponent(modelUrl));
+            el.setAttribute('scale', `${s} ${s} ${s}`);
+            el.setAttribute('position', `${p.get('px')} ${p.get('py')} ${p.get('pz')}`);
+            el.setAttribute('rotation', `${p.get('rx')} ${p.get('ry')} ${p.get('rz')}`);
         }
+        
+        document.getElementById('marker').addEventListener('markerLost', () => { 
+            document.getElementById('entidad').setAttribute('visible', 'true'); 
+        });
+
+        setInterval(() => {
+            const video = document.querySelector('#arjs-video');
+            if (video) { video.style.width = window.innerWidth + 'px'; video.style.height = window.innerHeight + 'px'; }
+        }, 500);
     </script>
 </body>
 </html>
