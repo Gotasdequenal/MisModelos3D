@@ -1,28 +1,59 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-    <style> 
-        body { margin: 0; overflow: hidden; } 
-        #floorMode { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; background: white; }
-        .btn-surface { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 2000; padding: 15px 30px; background: #00d1ff; border-radius: 50px; border: none; font-weight: bold; }
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
+        #arjs-video { width: 100vw !important; height: 100vh !important; object-fit: cover !important; position: fixed !important; top: 0; left: 0; z-index: -1; }
+        .mode-btn { position: fixed; top: 20px; right: 20px; padding: 15px; background: #00d1ff; color: #000; border: none; border-radius: 10px; font-weight: bold; z-index: 1000; box-shadow: 0 5px 15px rgba(0,209,255,0.4); }
+        model-viewer { display: none; width: 100%; height: 100%; position: fixed; top:0; left:0; z-index: 2000; }
     </style>
 </head>
-<body>
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-        <a-marker preset="hiro">
-            <a-entity id="modeloHiro" gltf-model=""></a-entity>
-        </a-marker>
+<body style="margin: 0; background: transparent;">
+
+    <button class="mode-btn" id="switchBtn">💎 MODO SUELO (ALTA CALIDAD)</button>
+
+    <!-- MODO 1: MARCADOR HIRO -->
+    <a-scene id="hiroScene" embedded arjs="sourceType: webcam; debugUIEnabled: false; patternRatio: 0.5;" vr-mode-ui="enabled: false" renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true;">
+        <a-assets><a-asset-item id="modelo" src=""></a-asset-item></a-assets>
+        <a-entity light="type: ambient; intensity: 2;"></a-entity>
+        <a-entity light="type: directional; intensity: 1.5; position: 1 4 3;"></a-entity>
+        <a-marker preset="hiro" id="marker" emitevents="true"><a-entity id="entidad" gltf-model="#modelo"></a-entity></a-marker>
         <a-entity camera></a-entity>
     </a-scene>
-    <model-viewer id="floorMode" ar ar-modes="webxr scene-viewer" camera-controls></model-viewer>
-    <button class="btn-surface" onclick="document.getElementById('floorMode').activateAR()">Ver en superficie plana</button>
+
+    <!-- MODO 2: SUELO (CALIDAD PROFESIONAL) -->
+    <model-viewer id="floorViewer" ar ar-modes="webxr scene-viewer quick-look" camera-controls shadow-intensity="1" environment-image="neutral" exposure="1.2">
+        <button slot="ar-button" style="position:absolute; bottom:50px; left:50%; transform:translateX(-50%); padding:20px; background:#00d1ff; border:none; border-radius:50px; font-weight:bold;">✨ PONER EN MI MESA</button>
+        <button id="backToHiro" style="position:absolute; top:20px; left:20px; padding:10px; background:white; border-radius:10px; border:none;">← Volver a Hiro</button>
+    </model-viewer>
+
     <script>
-        const url = new URLSearchParams(window.location.search).get('model');
-        document.getElementById('modeloHiro').setAttribute('gltf-model', url);
-        document.getElementById('floorMode').src = url;
+        const p = new URLSearchParams(window.location.search);
+        const m = decodeURIComponent(p.get('model'));
+        const s = parseFloat(p.get('s') || "1") * 0.45;
+        const el = document.getElementById('entidad');
+        const fv = document.getElementById('floorViewer');
+
+        if(m) {
+            el.setAttribute('gltf-model', m); el.setAttribute('scale', `${s} ${s} ${s}`);
+            el.setAttribute('position', `${p.get('px')} ${p.get('py')} ${p.get('pz')}`);
+            el.setAttribute('rotation', `${THREE.MathUtils.degToRad(p.get('rx'))} ${THREE.MathUtils.degToRad(p.get('ry'))} ${THREE.MathUtils.degToRad(p.get('rz'))}`);
+            fv.src = m; fv.scale = `${p.get('s')} ${p.get('s')} ${p.get('s')}`;
+        }
+
+        document.getElementById('marker').addEventListener('markerLost', () => { el.setAttribute('visible', 'true'); });
+        document.getElementById('switchBtn').onclick = () => { fv.style.display = 'block'; };
+        document.getElementById('backToHiro').onclick = () => { fv.style.display = 'none'; };
+
+        setInterval(() => {
+            const v = document.querySelector('#arjs-video');
+            if (v) { v.style.width = window.innerWidth + 'px'; v.style.height = window.innerHeight + 'px'; }
+        }, 500);
     </script>
 </body>
 </html>
