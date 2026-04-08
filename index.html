@@ -2,67 +2,90 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Estación 3D Pro - Gotasdequenal</title>
+    <title>Editor AR Pro v6 - Gotasdequenal</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-orbit-controls@1.3.2/dist/aframe-orbit-controls.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; height: 100vh; overflow: hidden; }
-        #sidebar { width: 320px; background: #1e293b; padding: 20px; border-right: 2px solid #334155; display: flex; flex-direction: column; gap: 10px; z-index: 100; overflow-y: auto; }
+        
+        /* SIDEBAR */
+        #sidebar { width: 340px; background: #1e293b; padding: 20px; border-right: 2px solid #334155; display: flex; flex-direction: column; gap: 8px; z-index: 100; overflow-y: auto; }
         .control-group { background: #334155; padding: 12px; border-radius: 12px; border: 1px solid #475569; }
         label { display: block; font-size: 0.65rem; color: #38bdf8; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
-        input[type="range"] { width: 100%; cursor: pointer; accent-color: #38bdf8; }
+        
+        /* COLORES DE SLIDERS */
+        input[type="range"] { width: 100%; cursor: pointer; height: 6px; border-radius: 5px; appearance: none; background: #475569; outline: none; margin-bottom: 10px; }
+        .range-x::-webkit-slider-thumb { appearance: none; width: 15px; height: 15px; background: #ef4444; border-radius: 50%; }
+        .range-y::-webkit-slider-thumb { appearance: none; width: 15px; height: 15px; background: #22c55e; border-radius: 50%; }
+        .range-z::-webkit-slider-thumb { appearance: none; width: 15px; height: 15px; background: #3b82f6; border-radius: 50%; }
         
         .btn-ar-orbe { width: 80px; height: 80px; border-radius: 50%; border: none; cursor: pointer; background: radial-gradient(circle at 30% 30%, #00f2fe, #0077be); color: white; font-weight: bold; align-self: center; margin-top: auto; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
-        
+
         #preview-zone { flex-grow: 1; position: relative; background: #000; }
-        
-        /* Pantalla de Escaneo Profesional */
-        #presentation-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; color: black; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
-        .hiro-container { border: 40px solid black; padding: 0; line-height: 0; margin-bottom: 20px; box-shadow: 0 0 30px rgba(0,0,0,0.2); }
+
+        /* VISTA PRESENTACIÓN HORIZONTAL */
+        #presentation-view {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; color: black; z-index: 1000;
+            flex-direction: row; align-items: center; justify-content: space-around; padding: 40px; box-sizing: border-box;
+        }
+        .pres-column { display: flex; flex-direction: column; align-items: center; text-align: center; flex: 1; }
+        .hiro-frame { border: 40px solid black; padding: 20px; background: white; margin-bottom: 10px; }
+        #btn-back { position: absolute; top: 20px; left: 20px; padding: 10px 20px; border-radius: 30px; cursor: pointer; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
 
     <div id="sidebar">
-        <h2 style="color: #38bdf8; text-align: center; margin: 0; font-size: 1.2rem;">ESTACIÓN 3D PRO</h2>
+        <h2 style="color: #38bdf8; text-align: center; margin: 0; font-size: 1.1rem;">EDITOR ROBÓTICA 3D</h2>
         
         <div class="control-group">
-            <label>ESCALA: <span id="scale-val">1</span>X</label>
+            <label>Escala General: <span id="scale-val">1</span>X</label>
             <input type="range" id="scale" min="0.1" max="10" step="0.1" value="1" oninput="actualizar()">
         </div>
 
         <div class="control-group">
-            <label>POSICIÓN (X, Y, Z)</label>
-            <input type="range" id="posX" min="-4" max="4" step="0.1" value="0" oninput="actualizar()">
-            <input type="range" id="posY" min="-2" max="4" step="0.1" value="0" oninput="actualizar()">
-            <input type="range" id="posZ" min="-4" max="4" step="0.1" value="0" oninput="actualizar()">
+            <label>Posición (Latitud | Altura | Prof.)</label>
+            <div style="display:flex; justify-content: space-between; font-size: 9px; color:#ef4444"><span>X-</span><span>EJE X</span><span>X+</span></div>
+            <input type="range" id="posX" class="range-x" min="-4" max="4" step="0.1" value="0" oninput="actualizar()">
+            
+            <div style="display:flex; justify-content: space-between; font-size: 9px; color:#22c55e"><span>Y-</span><span>EJE Y (ALTURA)</span><span>Y+</span></div>
+            <input type="range" id="posY" class="range-y" min="-2" max="4" step="0.1" value="0" oninput="actualizar()">
+            
+            <div style="display:flex; justify-content: space-between; font-size: 9px; color:#3b82f6"><span>Z-</span><span>EJE Z</span><span>Z+</span></div>
+            <input type="range" id="posZ" class="range-z" min="-4" max="4" step="0.1" value="0" oninput="actualizar()">
         </div>
 
         <div class="control-group">
-            <label>ROTACIÓN (X, Y, Z)</label>
-            <input type="range" id="rotX" min="-180" max="180" value="0" oninput="actualizar()">
-            <input type="range" id="rotY" min="-180" max="180" value="0" oninput="actualizar()">
-            <input type="range" id="rotZ" min="-180" max="180" value="0" oninput="actualizar()">
+            <label>Rotación (X | Y | Z)</label>
+            <label style="font-size: 9px; color:#ef4444">ROTACIÓN EJE X</label>
+            <input type="range" id="rotX" class="range-x" min="-180" max="180" value="0" oninput="actualizar()">
+            <label style="font-size: 9px; color:#22c55e">ROTACIÓN EJE Y</label>
+            <input type="range" id="rotY" class="range-y" min="-180" max="180" value="0" oninput="actualizar()">
+            <label style="font-size: 9px; color:#3b82f6">ROTACIÓN EJE Z</label>
+            <input type="range" id="rotZ" class="range-z" min="-180" max="180" value="0" oninput="actualizar()">
         </div>
 
         <button class="btn-ar-orbe" onclick="mostrarPresentacion()">AR</button>
     </div>
 
     <div id="preview-zone">
-        <a-scene embedded vr-mode-ui="enabled: false">
+        <a-scene embedded vr-mode-ui="enabled: false" renderer="colorManagement: true; shadowMapEnabled: true;">
             <a-assets><a-asset-item id="modelo" src="modelo1.glb"></a-asset-item></a-assets>
             <a-sky color="#0f172a"></a-sky>
-            <a-entity light="type: ambient; intensity: 1.2;"></a-entity>
-            <a-entity light="type: directional; intensity: 0.8; position: 1 3 2"></a-entity>
+            
+            <!-- Luces Mejoradas para Detalle Máximo -->
+            <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
+            <a-entity light="type: directional; intensity: 1.2; position: 2 4 2; castShadow: true;"></a-entity>
+            <a-entity light="type: point; intensity: 0.8; position: -2 2 2;"></a-entity>
 
-            <!-- EJES Y GRILLA -->
-            <a-grid width="10" height="10" color="#444" opacity="0.5"></a-grid>
-            <a-entity line="start: -5 0.01 0; end: 5 0.01 0; color: #ef4444"></a-entity>
-            <a-entity line="start: 0 0.01 -5; end: 0 0.01 5; color: #3b82f6"></a-entity>
-            <a-entity line="start: 0 0 0; end: 0 5 0; color: #22c55e"></a-entity>
+            <!-- Referencias -->
+            <a-grid width="10" height="10" color="#444" opacity="0.3"></a-grid>
+            <a-entity line="start: -5 0.01 0; end: 5 0.01 0; color: #ef4444"></a-entity> <!-- X -->
+            <a-entity line="start: 0 0.01 -5; end: 0 0.01 5; color: #3b82f6"></a-entity> <!-- Z -->
+            <a-entity line="start: 0 0 0; end: 0 5 0; color: #22c55e"></a-entity> <!-- Y -->
 
-            <!-- SUELO HIRO OFICIAL -->
             <a-plane rotation="-90 0 0" width="1.5" height="1.5" src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" position="0 0.02 0"></a-plane>
 
             <a-entity id="robot" gltf-model="#modelo" position="0 0 0"></a-entity>
@@ -71,17 +94,25 @@
     </div>
 
     <div id="presentation-view">
-        <button onclick="document.getElementById('presentation-view').style.display='none'" style="position:absolute; top:20px; left:20px; padding: 10px; cursor: pointer;">VOLVER</button>
-        <!-- Marcador Hiro Oficial en Imagen -->
-        <div class="hiro-container">
-            <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" width="300" height="300">
+        <button id="btn-back" onclick="document.getElementById('presentation-view').style.display='none'">CERRAR</button>
+        
+        <div class="pres-column">
+            <h3 style="margin-bottom: 20px;">1. ESCANEA ESTE QR</h3>
+            <div id="qrcode"></div>
+            <p style="margin-top: 20px; font-size: 0.9rem; color: #555;">Para ver el modelo en Realidad Aumentada</p>
         </div>
-        <div id="qrcode"></div>
-        <p style="font-weight: bold; margin-top: 10px; font-family: sans-serif;">ESCANEA Y APUNTA AL CUADRO NEGRO</p>
+
+        <div class="pres-column">
+            <h3 style="margin-bottom: 20px;">2. APUNTA A ESTE CÓDIGO</h3>
+            <div class="hiro-frame">
+                <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" width="280" height="280">
+            </div>
+            <p style="margin-top: 10px; font-weight: bold;">CÓDIGO HIRO</p>
+        </div>
     </div>
 
     <script>
-        var qr = new QRCode(document.getElementById("qrcode"), { width: 250, height: 250 });
+        var qr = new QRCode(document.getElementById("qrcode"), { width: 300, height: 300 });
         function actualizar() {
             const robot = document.getElementById('robot');
             if(!robot) return;
@@ -92,6 +123,7 @@
             const rx = document.getElementById('rotX').value;
             const ry = document.getElementById('rotY').value;
             const rz = document.getElementById('rotZ').value;
+            
             document.getElementById('scale-val').innerText = s;
             robot.setAttribute('scale', `${s} ${s} ${s}`);
             robot.setAttribute('position', `${px} ${py} ${pz}`);
