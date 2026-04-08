@@ -2,55 +2,78 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Editor 3D</title>
-    <script type="importmap">{ "imports": { "three": "https://unpkg.com/three@0.150.1/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.150.1/examples/jsm/" } }</script>
+    <title>Visualizador 3D AR - Gotasdequenal</title>
+    <script type="importmap">
+    { "imports": { "three": "https://unpkg.com/three@0.150.1/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.150.1/examples/jsm/" } }
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { margin: 0; background: #050811; color: white; display: flex; height: 100vh; overflow: hidden; }
-        #sidebar-left { width: 180px; background: #1e293b; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #050811; color: white; display: flex; height: 100vh; overflow: hidden; }
+        #header-title { position: absolute; top: 0; width: 100%; text-align: center; padding: 20px; background: rgba(5, 8, 17, 0.8); z-index: 200; border-bottom: 1px solid rgba(56, 189, 248, 0.2); }
+        #header-title h1 { margin: 0; font-size: 1rem; color: #00d1ff; text-transform: uppercase; letter-spacing: 4px; }
+
+        #sidebar-left { width: 180px; background: rgba(30, 41, 59, 0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px; z-index: 100; }
+        .upload-btn { background: #1e293b; border: 2px dashed #00d1ff; padding: 15px; border-radius: 12px; cursor: pointer; color: #00d1ff; font-size: 10px; font-weight: bold; text-align: center; width: 100px; }
+        .btn-delete { position: relative; padding: 10px 20px; background: #fec195; font-size: 11px; font-weight: bold; color: #181818; border: 2px solid #fec195; border-radius: 8px; cursor: pointer; }
+        .star { position: absolute; width: 10px; opacity: 0; transition: 0.5s; }
+        .btn-delete:hover .star { opacity: 1; }
+
+        #height-controls { position: absolute; top: 100px; right: 130px; display: flex; flex-direction: column; gap: 30px; z-index: 1000; }
+        .pushable { border: none; background: transparent; cursor: pointer; }
+        .front { display: block; padding: 10px 20px; border-radius: 12px; font-size: 0.7rem; color: white; font-weight: bold; }
+        
+        #sidebar-right { width: 100px; background: rgba(30, 41, 59, 0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+        .vertical-slider { appearance: slider-vertical; width: 6px; height: 300px; background: #334155; }
+
         #container3d { flex-grow: 1; position: relative; }
-        .btn-gen { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 15px 30px; background: #8f51ea; color: white; border-radius: 50px; cursor: pointer; border: none; font-weight: bold; }
-        #presentation { display: none; position: fixed; inset: 0; background: white; z-index: 2000; flex-direction: column; align-items: center; justify-content: center; color: black; }
+        
+        .btn-space { width: 18rem; height: 3.5rem; background: #212121; border-radius: 5rem; cursor: pointer; position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); border: double 4px transparent; background-image: linear-gradient(#212121, #212121), linear-gradient(137.48deg, #ffdb3b 10%, #fe53bb 45%, #8f51ea 67%, #0044ff 87%); background-origin: border-box; background-clip: content-box, border-box; z-index: 1000; display:flex; justify-content:center; align-items:center; }
     </style>
 </head>
 <body>
+    <div id="header-title"><h1>Visualizador de modelo 3D con realidad aumentada</h1></div>
     <div id="sidebar-left">
-        <div onclick="document.getElementById('fileInput').click()" style="border: 2px dashed #00d1ff; padding: 15px; cursor: pointer;">SUBIR ARCHIVO</div>
+        <div class="upload-btn" onclick="document.getElementById('fileInput').click()">SUBIR ARCHIVO</div>
         <input type="file" id="fileInput" hidden accept=".glb">
+        <button class="btn-delete" id="deleteBtn">ELIMINAR<svg class="star" style="top:-20px; left:-10px" viewBox="0 0 24 24"><path fill="#fff" d="M12 2l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1z"/></svg></button>
+    </div>
+    <div id="height-controls">
+        <button class="pushable" id="btnUp"><span class="front" style="background:#00d1ff">SUBIR</span></button>
+        <button class="pushable" id="btnDown"><span class="front" style="background:#9d50bb">BAJAR</span></button>
     </div>
     <div id="container3d"></div>
-    <button class="btn-gen" id="generateBtn">GENERAR CÓDIGO QR</button>
-    <div id="presentation"><button id="closeBtn">CERRAR</button><div id="qrcode"></div></div>
-
+    <div id="sidebar-right">
+        <span style="writing-mode: vertical-rl; margin-bottom: 15px; font-size: 11px; color: #00d1ff; font-weight: bold;">ESCALAR DISEÑO</span>
+        <input type="range" id="scaleInput" class="vertical-slider" min="0.1" max="15" step="0.1" value="1">
+    </div>
+    <button class="btn-space" id="generateBtn"><strong style="color:white; font-size:10px; letter-spacing:3px;">GENERAR CÓDIGO QR</strong></button>
+    
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        
-        let scene = new THREE.Scene(), robot;
+        let scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050811);
         let camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
         camera.position.set(5, 4, 8);
         let renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById('container3d').appendChild(renderer.domElement);
-        scene.add(new THREE.AmbientLight(0xffffff, 1.5), new THREE.GridHelper(10, 10), new THREE.AxesHelper(5));
-        
+        scene.add(new THREE.AmbientLight(0xffffff, 1.5), new THREE.GridHelper(15, 30), new THREE.AxesHelper(5));
+        let robot, controls = new OrbitControls(camera, renderer.domElement);
         document.getElementById('fileInput').onchange = (e) => {
-            new GLTFLoader().load(URL.createObjectURL(e.target.files[0]), (g) => { 
-                if(robot) scene.remove(robot);
-                robot = g.scene; scene.add(robot); 
-            });
+            new GLTFLoader().load(URL.createObjectURL(e.target.files[0]), (g) => { if(robot) scene.remove(robot); robot = g.scene; scene.add(robot); });
         };
+        document.getElementById('btnUp').onclick = () => { if(robot) robot.position.y += 0.2; };
+        document.getElementById('btnDown').onclick = () => { if(robot) robot.position.y -= 0.2; };
         document.getElementById('generateBtn').onclick = async () => {
             const file = document.getElementById('fileInput').files[0];
-            const formData = new FormData(); formData.append('file', file); formData.append('upload_preset', "Clase_3d");
-            const res = await fetch(`https://api.cloudinary.com/v1_1/dudse9ysg/auto/upload`, { method: 'POST', body: formData });
+            const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', "Clase_3d");
+            const res = await fetch(`https://api.cloudinary.com/v1_1/dudse9ysg/auto/upload`, { method: 'POST', body: fd });
             const data = await res.json();
             const url = `${window.location.origin}${window.location.pathname.replace('index.html','')}view.html?model=${encodeURIComponent(data.secure_url)}`;
-            document.getElementById('qrcode').innerHTML = ""; new QRCode(document.getElementById("qrcode"), { text: url, width: 250, height: 250 });
-            document.getElementById('presentation').style.display = 'flex';
+            alert("QR generado. (Abre view.html en móvil)");
         };
-        document.getElementById('closeBtn').onclick = () => document.getElementById('presentation').style.display = 'none';
         function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); } animate();
     </script>
 </body>
