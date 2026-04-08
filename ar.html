@@ -7,42 +7,37 @@
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
-        /* FORZAR CÁMARA A TODA LA PANTALLA SIN ESPACIOS BLANCOS */
-        #arjs-video { 
-            width: 100vw !important; 
-            height: 100vh !important; 
-            object-fit: cover !important; 
-            margin: 0 !important; 
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-        }
-        .a-canvas { width: 100% !important; height: 100% !important; }
+        #arjs-video { width: 100vw !important; height: 100vh !important; object-fit: cover !important; position: fixed !important; top: 0; left: 0; }
     </style>
 </head>
 <body>
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
         <a-assets><a-asset-item id="modelo" src="modelo1.glb"></a-asset-item></a-assets>
         <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
-        <a-entity light="type: directional; intensity: 1; position: 1 2 1"></a-entity>
-
+        
         <a-marker preset="hiro">
-            <a-entity id="entidad" gltf-model="#modelo" position="0 0 0" scale="1 1 1"></a-entity>
+            <!-- El modelo ahora recibe posición y escala corregida -->
+            <a-entity id="entidad" gltf-model="#modelo"></a-entity>
         </a-marker>
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        const params = new URLSearchParams(window.location.search);
-        const s = params.get('s') || "1";
-        const rx = params.get('rx') || "0";
-        const ry = params.get('ry') || "0";
-        const rz = params.get('rz') || "0";
+        const p = new URLSearchParams(window.location.search);
+        
+        // Multiplicamos la escala por 4 para que en el celular se vea grande por defecto
+        const s = parseFloat(p.get('s') || "1") * 4; 
+        const rx = p.get('rx') || "0";
+        const ry = p.get('ry') || "0";
+        const rz = p.get('rz') || "0";
+        const px = p.get('px') || "0";
+        const py = p.get('py') || "0";
+        const pz = p.get('pz') || "0";
 
         const el = document.getElementById('entidad');
         el.setAttribute('scale', `${s} ${s} ${s}`);
-        // A-Frame usa X Y Z para la rotación
         el.setAttribute('rotation', `${rx} ${ry} ${rz}`);
+        el.setAttribute('position', `${px} ${py} ${pz}`);
     </script>
 </body>
 </html>
