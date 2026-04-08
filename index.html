@@ -1,86 +1,51 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Editor AR Pro - Gotasdequenal</title>
+    <title>Editor AR Profesional - Gotasdequenal</title>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <!-- Librería para las flechas de movimiento (Gizmos) -->
+    <script src="https://unpkg.com/aframe-transform-controls-component@0.3.0/dist/aframe-transform-controls-component.min.js"></script>
+    
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* PANEL LATERAL */
         #sidebar { 
             width: 320px; background: #1e293b; padding: 20px; 
             border-right: 2px solid #334155; display: flex; 
-            flex-direction: column; gap: 10px; z-index: 100;
+            flex-direction: column; gap: 15px; z-index: 100;
         }
-        .control-group { background: #334155; padding: 12px; border-radius: 12px; border: 1px solid #475569; }
-        label { display: block; font-size: 0.7rem; color: #38bdf8; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
-        
-        /* BOTONES GIZMO (MOVIMIENTO) */
-        .gizmo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 5px; }
-        .btn-gizmo { 
-            padding: 10px 5px; border: none; border-radius: 6px; color: white; 
-            font-weight: bold; cursor: pointer; font-size: 10px; background: #475569;
-        }
-        .btn-gizmo:hover { filter: brightness(1.2); }
-        .x-btn { border-bottom: 3px solid #ef4444; }
-        .y-btn { border-bottom: 3px solid #22c55e; }
-        .z-btn { border-bottom: 3px solid #3b82f6; }
-
+        .control-group { background: #334155; padding: 15px; border-radius: 12px; border: 1px solid #475569; }
+        label { display: block; font-size: 0.7rem; color: #38bdf8; margin-bottom: 10px; font-weight: bold; text-transform: uppercase; }
         input[type="range"] { width: 100%; cursor: pointer; accent-color: #38bdf8; }
         
-        /* BOTÓN AR ORBE */
-        .btn-orbe {
+        .btn-ar {
             width: 80px; height: 80px; border-radius: 50%; border: none; cursor: pointer;
             background: radial-gradient(circle at 30% 30%, #00f2fe, #0077be);
-            box-shadow: 0 8px 15px rgba(0,0,0,0.4), inset 0 -5px 10px rgba(0,0,0,0.5);
-            color: white; font-weight: bold; align-self: center; margin-top: auto;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4); color: white; font-weight: bold;
+            align-self: center; margin-top: auto;
         }
 
-        /* ZONA VISOR */
-        #preview-zone { 
-            flex-grow: 1; position: relative; background: radial-gradient(circle, #1e293b 0%, #0f172a 100%); 
-            display: flex; align-items: center; justify-content: center;
-        }
+        #preview-zone { flex-grow: 1; position: relative; background: #000; }
         
-        /* El robot se mueve visualmente con el JS */
-        model-viewer { width: 100%; height: 100%; z-index: 5; position: absolute; --poster-color: transparent; }
-
-        /* EL SUELO HIRO */
-        #stage-hiro {
-            position: absolute; width: 300px; height: 300px; background: white; border: 25px solid black;
-            display: flex; align-items: center; justify-content: center;
-            transform: rotateX(75deg); bottom: 15%; z-index: 1; box-shadow: 0 0 100px rgba(0,0,0,0.8);
-        }
-        #stage-hiro img { width: 70%; transform: rotateX(-10deg); }
-
+        /* Pantalla de Escaneo */
         #presentation-view {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; color: black; z-index: 1000; flex-direction: column; align-items: center; justify-content: center;
+            background: white; color: black; z-index: 1000;
+            flex-direction: column; align-items: center; justify-content: center;
         }
+        .hiro-frame { border: 50px solid black; padding: 40px; background: white; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
     <div id="sidebar">
-        <h3 style="color: #38bdf8; text-align: center; margin: 0;">EDITOR GIZMO 3D</h3>
+        <h2 style="color: #38bdf8; text-align: center; margin: 0;">EDITOR 3D PRO</h2>
+        <p style="font-size: 0.65rem; color: #94a3b8; text-align: center;">USA LAS FLECHAS PARA MOVER EL ROBOT</p>
         
         <div class="control-group">
-            <label>ESCALA: <span id="scale-val">1.0</span>x</label>
+            <label>ESCALA (Tamaño): <span id="scale-val">1.0</span>x</label>
             <input type="range" id="scale" min="0.1" max="10" step="0.1" value="1" oninput="actualizar()">
-        </div>
-
-        <div class="control-group">
-            <label>MOVIMIENTO (X, Y, Z)</label>
-            <div class="gizmo-grid">
-                <button class="btn-gizmo x-btn" onclick="mover('x', 0.2)">X+</button>
-                <button class="btn-gizmo y-btn" onclick="mover('y', 0.2)">Y+</button>
-                <button class="btn-gizmo z-btn" onclick="mover('z', 0.2)">Z+</button>
-                <button class="btn-gizmo x-btn" onclick="mover('x', -0.2)">X-</button>
-                <button class="btn-gizmo y-btn" onclick="mover('y', -0.2)">Y-</button>
-                <button class="btn-gizmo z-btn" onclick="mover('z', -0.2)">Z-</button>
-            </div>
         </div>
 
         <div class="control-group">
@@ -90,26 +55,47 @@
             <input type="range" id="rotZ" min="-180" max="180" value="0" oninput="actualizar()">
         </div>
 
-        <button class="btn-orbe" onclick="mostrarPresentacion()">AR</button>
+        <button class="btn-ar" onclick="mostrarPresentacion()">AR</button>
     </div>
 
     <div id="preview-zone">
-        <div id="stage-hiro">
-            <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg">
-        </div>
-        <model-viewer id="visor" src="modelo1.glb" shadow-intensity="1" environment-image="neutral" exposure="1" interaction-prompt="none"></model-viewer>
+        <a-scene embedded vr-mode-ui="enabled: false">
+            <a-assets><a-asset-item id="modelo" src="modelo1.glb"></a-asset-item></a-assets>
+            
+            <a-sky color="#0f172a"></a-sky>
+            <a-entity light="type: ambient; intensity: 1.2;"></a-entity>
+            <a-entity light="type: directional; intensity: 0.8; position: 1 3 2"></a-entity>
+
+            <!-- Piso HIRO con Rejilla 3D -->
+            <a-plane position="0 0 0" rotation="-90 0 0" width="2" height="2" src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg"></a-plane>
+            <a-grid position="0 -0.01 0" rotation="-90 0 0" width="10" height="10" color="#334155"></a-grid>
+
+            <!-- EL ROBOT CON GIZMOS (FLECHITAS) -->
+            <!-- Puedes moverlo arrastrando las flechas directamente -->
+            <a-entity id="robot-container" transform-controls="mode: translate">
+                <a-entity id="robot" gltf-model="#modelo" position="0 0 0" scale="1 1 1"></a-entity>
+            </a-entity>
+
+            <!-- Cámara: Clic izquierdo para rotar la vista -->
+            <a-entity id="cameraRig" position="0 1.5 3">
+                <a-camera look-controls wasd-controls="enabled: false"></a-camera>
+            </a-entity>
+        </a-scene>
     </div>
 
     <div id="presentation-view">
-        <button onclick="document.getElementById('presentation-view').style.display='none'" style="position:absolute; top:20px; left:20px; padding:10px;">VOLVER</button>
-        <div style="border: 40px solid black; padding: 20px; background: white;"><img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" width="250"></div>
-        <div id="qrcode" style="margin-top:20px;"></div>
+        <button onclick="document.getElementById('presentation-view').style.display='none'" style="position:absolute; top:20px; left:20px; padding: 10px; cursor:pointer;">← VOLVER</button>
+        <div class="hiro-frame">
+            <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" width="250">
+        </div>
+        <div id="qrcode"></div>
+        <p style="margin-top: 10px; font-weight: bold;">ESCANEA Y APUNTA AL MARCADOR HIRO</p>
     </div>
 
     <script>
-        var qr = new QRCode(document.getElementById("qrcode"), { width: 220, height: 220 });
-        const visor = document.getElementById('visor');
-        let pos = { x: 0, y: 0, z: 0 };
+        var qr = new QRCode(document.getElementById("qrcode"), { width: 250, height: 250 });
+        const robot = document.getElementById('robot');
+        const container = document.getElementById('robot-container');
 
         function actualizar() {
             const s = document.getElementById('scale').value;
@@ -118,29 +104,29 @@
             const rz = document.getElementById('rotZ').value;
             
             document.getElementById('scale-val').innerText = s;
-
-            // Visual en PC: El robot se mueve y escala sobre el logo Hiro
-            visor.style.transform = `scale(${s}) translate(${pos.x * 50}px, ${pos.z * 50}px)`;
-            visor.style.top = `${-pos.y * 50}px`; // El eje Y es altura
-            visor.orientation = `${rx}deg ${ry}deg ${rz}deg`;
-        }
-
-        function mover(eje, valor) {
-            pos[eje] = Math.round((pos[eje] + valor) * 10) / 10;
-            actualizar();
+            robot.setAttribute('scale', `${s} ${s} ${s}`);
+            robot.setAttribute('rotation', `${rx} ${ry} ${rz}`);
         }
 
         function mostrarPresentacion() {
-            const val = (id) => document.getElementById(id).value;
+            // Obtener posición actual del robot (movido por las flechas)
+            const pos = container.getAttribute('position');
+            const s = document.getElementById('scale').value;
+            const rx = document.getElementById('rotX').value;
+            const ry = document.getElementById('rotY').value;
+            const rz = document.getElementById('rotZ').value;
+
             let baseUrl = window.location.href.split('index.html')[0].split('?')[0];
             if (!baseUrl.endsWith('/')) baseUrl += '/';
             
-            // Enviamos los datos al celular. Multiplicamos escala para que se vea bien.
-            let finalUrl = `${baseUrl}ar.html?s=${val('scale')}&rx=${val('rotX')}&ry=${val('rotY')}&rz=${val('rotZ')}&px=${pos.x}&py=${pos.y}&pz=${pos.z}`;
+            // Generamos el link con los datos exactos del Gizmo
+            let finalUrl = `${baseUrl}ar.html?s=${s}&rx=${rx}&ry=${ry}&rz=${rz}&px=${pos.x.toFixed(2)}&py=${pos.y.toFixed(2)}&pz=${pos.z.toFixed(2)}`;
+            
             qr.clear();
             qr.makeCode(finalUrl);
             document.getElementById('presentation-view').style.display = 'flex';
         }
+        
         window.onload = actualizar;
     </script>
 </body>
