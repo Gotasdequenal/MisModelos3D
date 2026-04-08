@@ -2,68 +2,62 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Editor AR Pro v6 - Gotasdequenal</title>
+    <title>Editor AR Pro v7 - Gotasdequenal</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://unpkg.com/aframe-orbit-controls@1.3.2/dist/aframe-orbit-controls.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* SIDEBAR */
-        #sidebar { width: 340px; background: #1e293b; padding: 20px; border-right: 2px solid #334155; display: flex; flex-direction: column; gap: 8px; z-index: 100; overflow-y: auto; }
-        .control-group { background: #334155; padding: 12px; border-radius: 12px; border: 1px solid #475569; }
+        #sidebar { width: 340px; background: #1e293b; padding: 15px; border-right: 2px solid #334155; display: flex; flex-direction: column; gap: 8px; z-index: 100; overflow-y: auto; }
+        .control-group { background: #334155; padding: 10px; border-radius: 12px; border: 1px solid #475569; }
         label { display: block; font-size: 0.65rem; color: #38bdf8; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
         
-        /* COLORES DE SLIDERS */
-        input[type="range"] { width: 100%; cursor: pointer; height: 6px; border-radius: 5px; appearance: none; background: #475569; outline: none; margin-bottom: 10px; }
-        .range-x::-webkit-slider-thumb { appearance: none; width: 15px; height: 15px; background: #ef4444; border-radius: 50%; }
-        .range-y::-webkit-slider-thumb { appearance: none; width: 15px; height: 15px; background: #22c55e; border-radius: 50%; }
-        .range-z::-webkit-slider-thumb { appearance: none; width: 15px; height: 15px; background: #3b82f6; border-radius: 50%; }
+        input[type="range"] { width: 100%; cursor: pointer; height: 6px; border-radius: 5px; appearance: none; background: #475569; outline: none; margin-bottom: 8px; }
+        .range-x::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: #ef4444; border-radius: 50%; }
+        .range-y::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: #22c55e; border-radius: 50%; }
+        .range-z::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: #3b82f6; border-radius: 50%; }
         
         .btn-ar-orbe { width: 80px; height: 80px; border-radius: 50%; border: none; cursor: pointer; background: radial-gradient(circle at 30% 30%, #00f2fe, #0077be); color: white; font-weight: bold; align-self: center; margin-top: auto; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
 
         #preview-zone { flex-grow: 1; position: relative; background: #000; }
 
-        /* VISTA PRESENTACIÓN HORIZONTAL */
+        /* PRESENTACIÓN HORIZONTAL */
         #presentation-view {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: white; color: black; z-index: 1000;
-            flex-direction: row; align-items: center; justify-content: space-around; padding: 40px; box-sizing: border-box;
+            flex-direction: row; align-items: center; justify-content: center; padding: 20px; gap: 50px;
         }
-        .pres-column { display: flex; flex-direction: column; align-items: center; text-align: center; flex: 1; }
-        .hiro-frame { border: 40px solid black; padding: 20px; background: white; margin-bottom: 10px; }
-        #btn-back { position: absolute; top: 20px; left: 20px; padding: 10px 20px; border-radius: 30px; cursor: pointer; border: 1px solid #ccc; }
+        .pres-col { display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .hiro-img { border: 40px solid black; padding: 0; width: 300px; height: 300px; }
     </style>
 </head>
 <body>
 
     <div id="sidebar">
-        <h2 style="color: #38bdf8; text-align: center; margin: 0; font-size: 1.1rem;">EDITOR ROBÓTICA 3D</h2>
+        <h2 style="color: #38bdf8; text-align: center; margin: 0; font-size: 1rem;">ESTACIÓN ROBÓTICA</h2>
         
         <div class="control-group">
-            <label>Escala General: <span id="scale-val">1</span>X</label>
+            <label>ESCALA: <span id="scale-val">1</span>X</label>
             <input type="range" id="scale" min="0.1" max="10" step="0.1" value="1" oninput="actualizar()">
         </div>
 
         <div class="control-group">
-            <label>Posición (Latitud | Altura | Prof.)</label>
-            <div style="display:flex; justify-content: space-between; font-size: 9px; color:#ef4444"><span>X-</span><span>EJE X</span><span>X+</span></div>
+            <label>POSICIÓN</label>
+            <label style="color:#ef4444; font-size:8px">EJE X (HORIZONTAL)</label>
             <input type="range" id="posX" class="range-x" min="-4" max="4" step="0.1" value="0" oninput="actualizar()">
-            
-            <div style="display:flex; justify-content: space-between; font-size: 9px; color:#22c55e"><span>Y-</span><span>EJE Y (ALTURA)</span><span>Y+</span></div>
+            <label style="color:#22c55e; font-size:8px">EJE Y (ALTURA)</label>
             <input type="range" id="posY" class="range-y" min="-2" max="4" step="0.1" value="0" oninput="actualizar()">
-            
-            <div style="display:flex; justify-content: space-between; font-size: 9px; color:#3b82f6"><span>Z-</span><span>EJE Z</span><span>Z+</span></div>
+            <label style="color:#3b82f6; font-size:8px">EJE Z (PROFUNDIDAD)</label>
             <input type="range" id="posZ" class="range-z" min="-4" max="4" step="0.1" value="0" oninput="actualizar()">
         </div>
 
         <div class="control-group">
-            <label>Rotación (X | Y | Z)</label>
-            <label style="font-size: 9px; color:#ef4444">ROTACIÓN EJE X</label>
+            <label>ROTACIÓN</label>
+            <label style="color:#ef4444; font-size:8px">ROTAR X</label>
             <input type="range" id="rotX" class="range-x" min="-180" max="180" value="0" oninput="actualizar()">
-            <label style="font-size: 9px; color:#22c55e">ROTACIÓN EJE Y</label>
+            <label style="color:#22c55e; font-size:8px">ROTAR Y</label>
             <input type="range" id="rotY" class="range-y" min="-180" max="180" value="0" oninput="actualizar()">
-            <label style="font-size: 9px; color:#3b82f6">ROTACIÓN EJE Z</label>
+            <label style="color:#3b82f6; font-size:8px">ROTAR Z</label>
             <input type="range" id="rotZ" class="range-z" min="-180" max="180" value="0" oninput="actualizar()">
         </div>
 
@@ -71,20 +65,20 @@
     </div>
 
     <div id="preview-zone">
-        <a-scene embedded vr-mode-ui="enabled: false" renderer="colorManagement: true; shadowMapEnabled: true;">
+        <a-scene embedded vr-mode-ui="enabled: false" renderer="colorManagement: true; physicallyCorrectLights: true;">
             <a-assets><a-asset-item id="modelo" src="modelo1.glb"></a-asset-item></a-assets>
             <a-sky color="#0f172a"></a-sky>
             
-            <!-- Luces Mejoradas para Detalle Máximo -->
-            <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
-            <a-entity light="type: directional; intensity: 1.2; position: 2 4 2; castShadow: true;"></a-entity>
-            <a-entity light="type: point; intensity: 0.8; position: -2 2 2;"></a-entity>
+            <!-- LUCES DE ESTUDIO (MÁXIMO DETALLE) -->
+            <a-entity light="type: ambient; intensity: 0.8;"></a-entity>
+            <a-entity light="type: directional; intensity: 1.5; position: 2 4 3;"></a-entity>
+            <a-entity light="type: hemisphere; intensity: 1; groundColor: #0f172a; color: #ffffff"></a-entity>
 
             <!-- Referencias -->
             <a-grid width="10" height="10" color="#444" opacity="0.3"></a-grid>
-            <a-entity line="start: -5 0.01 0; end: 5 0.01 0; color: #ef4444"></a-entity> <!-- X -->
-            <a-entity line="start: 0 0.01 -5; end: 0 0.01 5; color: #3b82f6"></a-entity> <!-- Z -->
-            <a-entity line="start: 0 0 0; end: 0 5 0; color: #22c55e"></a-entity> <!-- Y -->
+            <a-entity line="start: -5 0.01 0; end: 5 0.01 0; color: #ef4444"></a-entity>
+            <a-entity line="start: 0 0.01 -5; end: 0 0.01 5; color: #3b82f6"></a-entity>
+            <a-entity line="start: 0 0 0; end: 0 5 0; color: #22c55e"></a-entity>
 
             <a-plane rotation="-90 0 0" width="1.5" height="1.5" src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" position="0 0.02 0"></a-plane>
 
@@ -94,20 +88,16 @@
     </div>
 
     <div id="presentation-view">
-        <button id="btn-back" onclick="document.getElementById('presentation-view').style.display='none'">CERRAR</button>
-        
-        <div class="pres-column">
-            <h3 style="margin-bottom: 20px;">1. ESCANEA ESTE QR</h3>
+        <button onclick="document.getElementById('presentation-view').style.display='none'" style="position:absolute; top:20px; left:20px; padding:10px; cursor:pointer; border-radius:20px;">Cerrar</button>
+        <div class="pres-col">
+            <h2 style="margin-bottom:20px;">1. ESCANEA ESTE QR</h2>
             <div id="qrcode"></div>
-            <p style="margin-top: 20px; font-size: 0.9rem; color: #555;">Para ver el modelo en Realidad Aumentada</p>
+            <p style="margin-top:20px; font-size:0.9rem; color:#666;">Abre el visor en tu celular</p>
         </div>
-
-        <div class="pres-column">
-            <h3 style="margin-bottom: 20px;">2. APUNTA A ESTE CÓDIGO</h3>
-            <div class="hiro-frame">
-                <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" width="280" height="280">
-            </div>
-            <p style="margin-top: 10px; font-weight: bold;">CÓDIGO HIRO</p>
+        <div class="pres-col">
+            <h2 style="margin-bottom:20px;">2. APUNTA AQUÍ</h2>
+            <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="hiro-img">
+            <p style="margin-top:20px; font-weight:bold;">MARCADOR HIRO OFICIAL</p>
         </div>
     </div>
 
@@ -123,7 +113,6 @@
             const rx = document.getElementById('rotX').value;
             const ry = document.getElementById('rotY').value;
             const rz = document.getElementById('rotZ').value;
-            
             document.getElementById('scale-val').innerText = s;
             robot.setAttribute('scale', `${s} ${s} ${s}`);
             robot.setAttribute('position', `${px} ${py} ${pz}`);
