@@ -2,59 +2,42 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Editor AR Pro v10 - Gotasdequenal</title>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <title>Estación de Ingeniería AR - Gotasdequenal</title>
+    <!-- Motores 3D Pro -->
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-orbit-controls@1.3.2/dist/aframe-orbit-controls.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; height: 100vh; overflow: hidden; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #000; color: white; display: flex; height: 100vh; overflow: hidden; }
         
         /* SIDEBAR */
         #sidebar { width: 340px; background: #1e293b; padding: 15px; border-right: 2px solid #334155; display: flex; flex-direction: column; gap: 8px; z-index: 100; overflow-y: auto; }
-        .control-group { background: #334155; padding: 10px; border-radius: 12px; border: 1px solid #475569; }
+        .control-group { background: #334155; padding: 12px; border-radius: 12px; border: 1px solid #475569; }
         label { display: block; font-size: 0.65rem; color: #38bdf8; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
         
+        /* SLIDERS CON COLORES */
         input[type="range"] { width: 100%; cursor: pointer; height: 6px; border-radius: 5px; appearance: none; background: #475569; outline: none; margin-bottom: 8px; }
         .range-x::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: #ef4444; border-radius: 50%; }
         .range-y::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: #22c55e; border-radius: 50%; }
         .range-z::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: #3b82f6; border-radius: 50%; }
         
-        .btn-ar-orbe { width: 80px; height: 80px; border-radius: 50%; border: none; cursor: pointer; background: radial-gradient(circle at 30% 30%, #00f2fe, #0077be); color: white; font-weight: bold; align-self: center; margin-top: auto; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
+        .btn-ar { width: 80px; height: 80px; border-radius: 50%; border: none; cursor: pointer; background: radial-gradient(circle at 30% 30%, #00f2fe, #0077be); color: white; font-weight: bold; align-self: center; margin-top: auto; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
 
-        /* PREVIEW ZONE */
-        #preview-zone { flex-grow: 1; position: relative; background: radial-gradient(circle, #233142 0%, #0f172a 100%); }
-        
-        /* EL ROBOT (Alta fidelidad) */
-        model-viewer { width: 100%; height: 100%; --poster-color: transparent; z-index: 10; }
-
-        /* ESCENARIO DE REFERENCIA (EJES Y GRILLA) */
-        #stage { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; pointer-events: none; perspective: 1000px; }
-        #floor { 
-            width: 600px; height: 600px; 
-            background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
-            background-size: 30px 30px; transform: rotateX(75deg) translateY(120px);
-            position: relative; display: flex; align-items: center; justify-content: center;
-        }
-        .axis { position: absolute; }
-        #axis-x { width: 1000px; height: 2px; background: #ef4444; } /* Rojo */
-        #axis-z { width: 2px; height: 1000px; background: #3b82f6; } /* Azul */
-        #axis-y { width: 2px; height: 400px; background: #22c55e; transform: rotateX(-90deg) translateZ(200px); position: absolute; } /* Verde - Vertical */
-        
-        #hiro-ref { width: 120px; height: 120px; border: 12px solid black; background: white; display: flex; align-items: center; justify-content: center; z-index: 1; }
-        #hiro-ref div { width: 60px; height: 60px; background: black; }
+        #preview-zone { flex-grow: 1; position: relative; }
 
         /* PRESENTACIÓN */
         #presentation-view {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: white; color: black; z-index: 1000;
-            flex-direction: row; align-items: center; justify-content: space-around; padding: 20px;
+            flex-direction: row; align-items: center; justify-content: center; gap: 60px;
         }
-        .hiro-img { border: 40px solid black; width: 300px; height: 300px; }
+        .hiro-marker { border: 45px solid black; padding: 20px; background: white; width: 280px; height: 280px; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
     <div id="sidebar">
-        <h2 style="color: #38bdf8; text-align: center; margin: 0; font-size: 1rem;">ESTACIÓN 3D PRO</h2>
+        <h2 style="color: #38bdf8; text-align: center; margin: 0; font-size: 1.1rem;">ESTACIÓN 3D PRO</h2>
         
         <div class="control-group">
             <label>ESCALA: <span id="scale-val">1</span>X</label>
@@ -62,67 +45,73 @@
         </div>
 
         <div class="control-group">
-            <label>POSICIÓN</label>
+            <label>POSICIÓN (X, Y, Z)</label>
             <label style="color:#ef4444; font-size:8px">HORIZONTAL (X)</label>
-            <input type="range" id="posX" class="range-x" min="-4" max="4" step="0.1" value="0" oninput="actualizar()">
+            <input type="range" id="posX" class="range-x" min="-5" max="5" step="0.1" value="0" oninput="actualizar()">
             <label style="color:#22c55e; font-size:8px">ALTURA (Y)</label>
-            <input type="range" id="posY" class="range-y" min="-2" max="4" step="0.1" value="0" oninput="actualizar()">
+            <input type="range" id="posY" class="range-y" min="-2" max="5" step="0.1" value="0" oninput="actualizar()">
             <label style="color:#3b82f6; font-size:8px">PROFUNDIDAD (Z)</label>
-            <input type="range" id="posZ" class="range-z" min="-4" max="4" step="0.1" value="0" oninput="actualizar()">
+            <input type="range" id="posZ" class="range-z" min="-5" max="5" step="0.1" value="0" oninput="actualizar()">
         </div>
 
         <div class="control-group">
-            <label>ROTACIÓN</label>
-            <label style="color:#ef4444; font-size:8px">ROTAR X</label>
+            <label>ROTACIÓN (X, Y, Z)</label>
             <input type="range" id="rotX" class="range-x" min="-180" max="180" value="0" oninput="actualizar()">
-            <label style="color:#22c55e; font-size:8px">ROTAR Y</label>
             <input type="range" id="rotY" class="range-y" min="-180" max="180" value="0" oninput="actualizar()">
-            <label style="color:#3b82f6; font-size:8px">ROTAR Z</label>
             <input type="range" id="rotZ" class="range-z" min="-180" max="180" value="0" oninput="actualizar()">
         </div>
 
-        <button class="btn-ar-orbe" onclick="mostrarPresentacion()">AR</button>
+        <button class="btn-ar" onclick="mostrarPresentacion()">AR</button>
     </div>
 
     <div id="preview-zone">
-        <!-- Escenario visual de fondo -->
-        <div id="stage">
-            <div id="floor">
-                <div id="axis-x" class="axis"></div>
-                <div id="axis-z" class="axis"></div>
-                <div id="axis-y"></div>
-                <div id="hiro-ref"><div></div></div>
-            </div>
-        </div>
+        <a-scene embedded vr-mode-ui="enabled: false" renderer="colorManagement: true; physicallyCorrectLights: true;">
+            <a-assets><a-asset-item id="modelo" src="modelo1.glb"></a-asset-item></a-assets>
+            <a-sky color="#0f172a"></a-sky>
+            
+            <!-- LUCES CALIDAD ESTUDIO -->
+            <a-entity light="type: ambient; intensity: 1.2;"></a-entity>
+            <a-entity light="type: directional; intensity: 1.5; position: 2 4 3;"></a-entity>
+            <a-entity light="type: point; intensity: 1; position: -2 2 -2;"></a-entity>
 
-        <model-viewer 
-            id="visor" 
-            src="modelo1.glb" 
-            camera-controls 
-            environment-image="neutral" 
-            shadow-intensity="1"
-            exposure="1.2">
-        </model-viewer>
+            <!-- EJES Y GRILLA -->
+            <a-entity position="0 0 0">
+                <a-grid width="10" height="10" color="#444" opacity="0.3"></a-grid>
+                <a-entity line="start: -10 0 0; end: 10 0 0; color: #ef4444"></a-entity> <!-- X Rojo -->
+                <a-entity line="start: 0 0 -10; end: 0 0 10; color: #3b82f6"></a-entity> <!-- Z Azul -->
+                <a-entity line="start: 0 0 0; end: 0 10 0; color: #22c55e"></a-entity>   <!-- Y Verde -->
+            </a-entity>
+
+            <!-- MARCADOR HIRO EN EL SUELO -->
+            <a-plane rotation="-90 0 0" width="1.5" height="1.5" src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" position="0 0.01 0"></a-plane>
+
+            <!-- EL ROBOT (Controlado por Sliders) -->
+            <a-entity id="robot" gltf-model="#modelo" position="0 0 0"></a-entity>
+
+            <!-- CÁMARA (Controlada por Mouse) -->
+            <a-entity id="camera" camera orbit-controls="target: 0 0.5 0; initialPosition: 0 2 5; minDistance: 1; maxDistance: 15;"></a-entity>
+        </a-scene>
     </div>
 
     <div id="presentation-view">
         <button onclick="document.getElementById('presentation-view').style.display='none'" style="position:absolute; top:20px; left:20px; padding:10px; cursor:pointer;">Cerrar</button>
         <div style="text-align:center">
-            <h3>1. ESCANEA ESTE QR</h3>
+            <h3>1. ESCANEA EL QR</h3>
             <div id="qrcode"></div>
-            <p style="margin-top:15px; font-size:0.9rem; color:#666;">Para ver el modelo en Realidad Aumentada</p>
         </div>
         <div style="text-align:center">
-            <h3>2. APUNTA AQUÍ</h3>
-            <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="hiro-img">
+            <h3>2. APUNTA AL MARCADOR</h3>
+            <div class="hiro-marker">
+                <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" width="220">
+            </div>
         </div>
     </div>
 
     <script>
-        var qr = new QRCode(document.getElementById("qrcode"), { width: 350, height: 350 });
-        const visor = document.getElementById('visor');
-
+        var qr = new QRCode(document.getElementById("qrcode"), { width: 320, height: 320 });
         function actualizar() {
+            const robot = document.getElementById('robot');
+            if(!robot) return;
             const s = document.getElementById('scale').value;
             const px = document.getElementById('posX').value;
             const py = document.getElementById('posY').value;
@@ -130,26 +119,20 @@
             const rx = document.getElementById('rotX').value;
             const ry = document.getElementById('rotY').value;
             const rz = document.getElementById('rotZ').value;
-            
             document.getElementById('scale-val').innerText = s;
-            
-            // Efecto visual en la PC
-            visor.scale = `${s} ${s} ${s}`;
-            visor.orientation = `${rx}deg ${ry}deg ${rz}deg`;
-            // Mover el contenedor para simular posición 3D
-            visor.style.transform = `translate(${px * 50}px, ${-py * 50}px)`;
+            robot.setAttribute('scale', `${s} ${s} ${s}`);
+            robot.setAttribute('position', `${px} ${py} ${pz}`);
+            robot.setAttribute('rotation', `${rx} ${ry} ${rz}`);
         }
-
         function mostrarPresentacion() {
             const val = (id) => document.getElementById(id).value;
             let baseUrl = window.location.href.split('index.html')[0].split('?')[0];
             if (!baseUrl.endsWith('/')) baseUrl += '/';
-            // Pasamos los parámetros al link del QR
             let finalUrl = `${baseUrl}ar.html?s=${val('scale')}&px=${val('posX')}&py=${val('posY')}&pz=${val('posZ')}&rx=${val('rotX')}&ry=${val('rotY')}&rz=${val('rotZ')}`;
             qr.clear(); qr.makeCode(finalUrl);
             document.getElementById('presentation-view').style.display = 'flex';
         }
-        window.onload = actualizar;
+        window.onload = () => { setTimeout(actualizar, 1000); };
     </script>
 </body>
 </html>
