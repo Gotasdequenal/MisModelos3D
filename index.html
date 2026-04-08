@@ -19,18 +19,15 @@
         #header-title { position: absolute; top: 0; width: 100%; text-align: center; padding: 20px; background: rgba(5, 8, 17, 0.8); backdrop-filter: blur(15px); z-index: 200; border-bottom: 1px solid rgba(56, 189, 248, 0.2); }
         #header-title h1 { margin: 0; font-size: 1rem; color: #00d1ff; text-transform: uppercase; letter-spacing: 4px; }
 
+        /* VERSIÓN */
+        #version-tag { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #334155; z-index: 1000; font-weight: bold; }
+
         /* SIDEBAR IZQUIERDA */
         #sidebar-left { width: 180px; background: rgba(30, 41, 59, 0.4); border-right: 1px solid rgba(255,255,255,0.1); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px; }
         .upload-btn { background: #1e293b; border: 2px dashed #00d1ff; padding: 15px; border-radius: 12px; cursor: pointer; color: #00d1ff; font-size: 10px; font-weight: bold; text-align: center; width: 100px; }
+        .btn-delete { position: relative; padding: 10px 20px; background: #fec195; font-size: 11px; font-weight: bold; color: #181818; border: 2px solid #fec195; border-radius: 8px; cursor: pointer; }
 
-        /* BOTÓN ELIMINAR */
-        .btn-delete { position: relative; padding: 10px 20px; background: #fec195; font-size: 11px; font-weight: bold; color: #181818; border: 2px solid #fec195; border-radius: 8px; cursor: pointer; transition: 0.3s; }
-        .star { position: absolute; width: 10px; opacity: 0; transition: 0.5s; fill: #fffdef; pointer-events: none; }
-        .btn-delete:hover { background: transparent; color: #fec195; box-shadow: 0 0 20px rgba(254, 193, 149, 0.5); }
-        .btn-delete:hover .star { opacity: 1; }
-        .btn-delete:hover .s1 { top: -15px; left: -5px; } .btn-delete:hover .s2 { top: 25px; left: 75px; }
-
-        /* CONTROLES ALTURA DERECHA */
+        /* CONTROLES ALTURA (DERECHA) */
         #height-controls { position: absolute; top: 120px; right: 130px; display: flex; flex-direction: column; gap: 35px; z-index: 1000; }
         .pushable { position: relative; border: none; background: transparent; padding: 0; cursor: pointer; }
         .shadow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px; background: rgba(0,0,0,0.5); transform: translateY(2px); transition: transform 600ms cubic-bezier(.3, .7, .4, 1); }
@@ -40,11 +37,11 @@
         .edge-down { background: #4a0072; } .front-down { background: #9d50bb; }
         .pushable:active .front { transform: translateY(-2px); }
 
-        /* SIDEBAR ESCALA */
+        /* SIDEBAR DERECHA */
         #sidebar-right { width: 100px; background: rgba(30, 41, 59, 0.4); border-left: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
         .vertical-slider { appearance: slider-vertical; width: 6px; height: 300px; background: #334155; outline: none; border-radius: 10px; cursor: pointer; }
 
-        /* BOTÓN GENERAR QR (SPACE ANIMADO) */
+        /* BOTÓN GENERAR QR (ESTILO SPACE GALÁCTICO) */
         .btn-space {
             display: flex; justify-content: center; align-items: center; width: 16rem; overflow: hidden; height: 3.5rem; background-size: 300% 300%; backdrop-filter: blur(1rem); border-radius: 5rem; transition: 0.5s; animation: gradient_301 5s ease infinite; border: double 4px transparent;
             background-image: linear-gradient(#212121, #212121), linear-gradient(137.48deg, #ffdb3b 10%, #fe53bb 45%, #8f51ea 67%, #0044ff 87%);
@@ -61,19 +58,30 @@
 
         #container3d { flex-grow: 1; position: relative; }
         #presentation { display: none; position: fixed; inset: 0; background: white; z-index: 2000; flex-direction: row; align-items: center; justify-content: center; gap: 80px; color: black; }
+
+        /* CURSOR HUD */
+        #custom-cursor { position: fixed; pointer-events: none; z-index: 9999; display: flex; flex-direction: column; align-items: center; opacity: 0; transition: opacity 0.2s ease; }
+        #cursor-icon { width: 25px; height: 35px; border: 2px solid white; border-radius: 12px; position: relative; background: rgba(0,0,0,0.8); }
+        .cursor-btn { position: absolute; top: 0; width: 50%; height: 40%; border-radius: 8px 8px 0 0; }
+        .btn-left { left: 0; background: #f59aff; } .btn-right { right: 0; background: #38bdf8; }
+        .cursor-labels { margin-top: 5px; display: flex; gap: 10px; font-size: 10px; font-weight: bold; background: rgba(0,0,0,0.7); padding: 4px; border-radius: 5px; }
     </style>
 </head>
 <body>
+
+    <div id="version-tag">VERSION 1.1</div>
+
+    <div id="custom-cursor">
+        <div id="cursor-icon"><div class="cursor-btn btn-left"></div><div class="cursor-btn btn-right"></div></div>
+        <div class="cursor-labels"><span style="color:#f59aff">ROTAR</span><span style="color:#38bdf8">MOVER</span></div>
+    </div>
 
     <div id="header-title"><h1>Visualizador de modelo 3D con realidad aumentada</h1></div>
 
     <div id="sidebar-left">
         <div class="upload-btn" onclick="document.getElementById('fileInput').click()" id="upload-txt">SUBIR ARCHIVO (GLB)</div>
         <input type="file" id="fileInput" hidden accept=".glb">
-        <button class="btn-delete" id="deleteBtn">ELIMINAR
-            <svg class="star s1" viewBox="0 0 784 815"><path d="M392 0L583 260L784 392L583 523L392 815L200 523L0 392L200 260L392 0Z"/></svg>
-            <svg class="star s2" viewBox="0 0 784 815"><path d="M392 0L583 260L784 392L583 523L392 815L200 523L0 392L200 260L392 0Z"/></svg>
-        </button>
+        <button class="btn-delete" id="deleteBtn">ELIMINAR</button>
     </div>
 
     <div id="height-controls">
@@ -109,6 +117,7 @@
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
         let isDragging = false, isRotating = false;
+        const hud = document.getElementById('custom-cursor');
 
         init();
 
@@ -139,7 +148,7 @@
                     if(robot) scene.remove(robot);
                     loader.load(URL.createObjectURL(file), (g) => { 
                         robot = g.scene; scene.add(robot); 
-                        document.getElementById('upload-txt').innerText = "ARCHIVO LISTO";
+                        document.getElementById('upload-txt').innerText = "LISTO";
                     });
                 }
             };
@@ -151,33 +160,27 @@
             };
 
             controls = new OrbitControls(camera, renderer.domElement);
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mousedown', onMouseDown);
+            window.addEventListener('mousemove', (e) => {
+                hud.style.left = e.clientX + 'px'; hud.style.top = e.clientY + 'px';
+                mouse.x = ((e.clientX - 180) / (window.innerWidth - 280)) * 2 - 1;
+                mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                if(robot){
+                    const hits = raycaster.intersectObject(robot, true);
+                    if(hits.length > 0){ hud.style.opacity = "1"; document.body.style.cursor = "none"; }
+                    else { hud.style.opacity = "0"; document.body.style.cursor = "default"; }
+                    if(isDragging){
+                        const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -robot.position.y);
+                        const pt = new THREE.Vector3(); raycaster.ray.intersectPlane(plane, pt);
+                        robot.position.x = pt.x; robot.position.z = pt.z;
+                    }
+                    if(isRotating){ robot.rotation.y += e.movementX * 0.01; robot.rotation.x += e.movementY * 0.01; }
+                }
+            });
+            window.addEventListener('mousedown', (e) => { if(robot && raycaster.intersectObject(robot, true).length > 0){ controls.enabled = false; if(e.button === 0) isRotating = true; if(e.button === 2) isDragging = true; } });
             window.addEventListener('mouseup', () => { controls.enabled = true; isDragging = isRotating = false; });
             function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
             animate();
-        }
-
-        function onMouseMove(e) {
-            mouse.x = ((e.clientX - 180) / (window.innerWidth - 280)) * 2 - 1;
-            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
-            if(robot && isDragging){
-                const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -robot.position.y);
-                const pt = new THREE.Vector3(); raycaster.ray.intersectPlane(plane, pt);
-                robot.position.x = pt.x; robot.position.z = pt.z;
-            }
-            if(robot && isRotating){ robot.rotation.y += e.movementX * 0.01; robot.rotation.x += e.movementY * 0.01; }
-        }
-
-        function onMouseDown(e) {
-            if(!robot) return;
-            const hits = raycaster.intersectObject(robot, true);
-            if(hits.length > 0){
-                controls.enabled = false;
-                if(e.button === 0) isRotating = true;
-                if(e.button === 2) isDragging = true;
-            }
         }
 
         document.getElementById('btnUp').onclick = () => { if(robot) robot.position.y += 0.2; };
@@ -189,16 +192,16 @@
         document.getElementById('generateBtn').onclick = async () => {
             const file = document.getElementById('fileInput').files[0];
             if(!file) return alert("Sube un modelo primero");
-            const btnStrong = document.querySelector('.btn-space strong');
-            btnStrong.innerText = "SUBIENDO...";
-
+            const btnText = document.querySelector('.btn-space strong');
+            btnText.innerText = "SUBIENDO...";
+            
             const formData = new FormData();
             formData.append('file', file);
             formData.append('upload_preset', "Clase_3d");
 
             try {
-                // Endpoint RAW para modelos 3D
-                const res = await fetch(`https://api.cloudinary.com/v1_1/dudse9ysg/raw/upload`, { method: 'POST', body: formData });
+                // Endpoint corregido para Cloudinary
+                const res = await fetch(`https://api.cloudinary.com/v1_1/dudse9ysg/auto/upload`, { method: 'POST', body: formData });
                 const data = await res.json();
                 
                 if(data.secure_url) {
@@ -207,9 +210,9 @@
                     document.getElementById('qrcode').innerHTML = "";
                     new QRCode(document.getElementById("qrcode"), { text: finalUrl, width: 300, height: 300 });
                     document.getElementById('presentation').style.display = 'flex';
-                } else { alert("Error: Verifica que el Upload Preset Clase_3d sea 'Unsigned' en Cloudinary"); }
-            } catch (err) { alert("Error de red al subir"); }
-            btnStrong.innerText = "GENERAR CÓDIGO QR";
+                } else { alert("Error de respuesta"); }
+            } catch (err) { alert("Error al subir el archivo"); }
+            btnText.innerText = "GENERAR CÓDIGO QR";
         };
         document.getElementById('closeBtn').onclick = () => document.getElementById('presentation').style.display = 'none';
     </script>
