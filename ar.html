@@ -16,14 +16,15 @@
         <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
         <a-entity light="type: directional; intensity: 1; position: 1 2 1"></a-entity>
         <a-marker preset="hiro">
-            <a-entity id="entidad" gltf-model="#modelo"></a-entity>
+            <a-entity id="entidad" gltf-model="#modelo" position="0 0 0" rotation="0 0 0" scale="1 1 1"></a-entity>
         </a-marker>
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
         const p = new URLSearchParams(window.location.search);
-        const s = p.get('s') || "1";
+        // Ajuste de escala para el móvil (AR.js necesita valores más pequeños)
+        const s = parseFloat(p.get('s') || "1") * 0.6; 
         const rx = p.get('rx') || "0";
         const ry = p.get('ry') || "0";
         const rz = p.get('rz') || "0";
