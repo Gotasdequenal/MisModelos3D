@@ -1,47 +1,118 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <title>Editor AR Master - Gotasdequenal</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
-        #arjs-video { 
-            width: 100vw !important; height: 100vh !important; 
-            object-fit: cover !important; position: fixed !important; top: 0; left: 0;
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; height: 100vh; display: flex; overflow: hidden; }
+        
+        /* PANEL LATERAL */
+        #sidebar { 
+            width: 320px; background: #1e293b; padding: 20px; 
+            border-right: 2px solid #334155; display: flex; 
+            flex-direction: column; gap: 10px; box-sizing: border-box; z-index: 10;
+        }
+        .control-group { background: #334155; padding: 10px; border-radius: 12px; border: 1px solid #475569; }
+        label { display: block; font-size: 0.7rem; color: #38bdf8; margin-bottom: 5px; font-weight: bold; }
+        input[type="range"] { width: 100%; cursor: pointer; accent-color: #38bdf8; }
+        
+        /* BOTÓN ORBE */
+        .btn-orbe {
+            width: 80px; height: 80px; border-radius: 50%; border: none; cursor: pointer;
+            background: radial-gradient(circle at 30% 30%, #00f2fe, #0077be);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.4), inset 0 -5px 10px rgba(0,0,0,0.5);
+            color: white; font-weight: bold; align-self: center; margin-top: auto;
+        }
+
+        /* ZONA VISOR */
+        #preview-zone { flex-grow: 1; position: relative; background: #0f172a; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        model-viewer { width: 100%; height: 100%; z-index: 5; }
+
+        #stage-floor {
+            position: absolute; width: 300px; height: 300px; background: white; border: 20px solid black;
+            display: flex; align-items: center; justify-content: center;
+            transform: rotateX(75deg); bottom: 15%; z-index: 1;
+        }
+        #stage-floor span { color: black; font-size: 3rem; font-weight: bold; font-family: Arial; }
+
+        /* PANTALLA HIRO */
+        #presentation-view {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; color: black; z-index: 1000;
+            flex-direction: column; align-items: center; justify-content: center;
         }
     </style>
 </head>
 <body>
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
-        <a-assets><a-asset-item id="modelo" src="modelo1.glb"></a-asset-item></a-assets>
-        <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
+
+    <div id="sidebar">
+        <h3 style="color: #38bdf8; text-align: center; margin: 0;">EDITOR 3D</h3>
         
-        <a-marker preset="hiro">
-            <a-entity id="entidad" gltf-model="#modelo"></a-entity>
-        </a-marker>
-        <a-entity camera></a-entity>
-    </a-scene>
+        <div class="control-group">
+            <label>ESCALA: <span id="scale-val">1.0</span>x</label>
+            <input type="range" id="scale" min="0.1" max="10" step="0.1" value="1" oninput="actualizar()">
+        </div>
+
+        <div class="control-group">
+            <label>POSICIÓN (X, Y, Z)</label>
+            <input type="range" id="posX" min="-5" max="5" step="0.1" value="0" oninput="actualizar()">
+            <input type="range" id="posY" min="-2" max="5" step="0.1" value="0" oninput="actualizar()">
+            <input type="range" id="posZ" min="-5" max="5" step="0.1" value="0" oninput="actualizar()">
+        </div>
+
+        <div class="control-group">
+            <label>ROTACIÓN (X, Y, Z)</label>
+            <input type="range" id="rotX" min="-180" max="180" value="0" oninput="actualizar()">
+            <input type="range" id="rotY" min="-180" max="180" value="0" oninput="actualizar()">
+            <input type="range" id="rotZ" min="-180" max="180" value="0" oninput="actualizar()">
+        </div>
+
+        <button class="btn-orbe" onclick="mostrarPresentacion()">AR</button>
+    </div>
+
+    <div id="preview-zone">
+        <div id="stage-floor"><span>Hiro</span></div>
+        <model-viewer id="visor" src="modelo1.glb" interaction-prompt="none" shadow-intensity="1" camera-controls auto-rotate></model-viewer>
+    </div>
+
+    <div id="presentation-view">
+        <button onclick="document.getElementById('presentation-view').style.display='none'" style="position:absolute; top:20px; left:20px;">VOLVER</button>
+        <div style="border: 40px solid black; padding: 20px; background: white;"><img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" width="200"></div>
+        <div id="qrcode" style="margin-top:20px;"></div>
+    </div>
 
     <script>
-        const p = new URLSearchParams(window.location.search);
-        
-        // Ajustamos la escala para que coincida con la percepción de la PC
-        // Un valor de 1 ahora es un tamaño decente sobre el marcador
-        const s = parseFloat(p.get('s') || "1") * 0.8; 
-        const rx = p.get('rx') || "0";
-        const ry = p.get('ry') || "0";
-        const rz = p.get('rz') || "0";
-        const px = p.get('px') || "0";
-        const py = p.get('py') || "0";
-        const pz = p.get('pz') || "0";
+        var qr = new QRCode(document.getElementById("qrcode"), { width: 220, height: 220 });
+        const visor = document.getElementById('visor');
 
-        const el = document.getElementById('entidad');
-        el.setAttribute('scale', `${s} ${s} ${s}`);
-        el.setAttribute('rotation', `${rx} ${ry} ${rz}`);
-        // Invertimos Z para que el arrastre de la PC coincida con la AR
-        el.setAttribute('position', `${px} ${py} ${pz}`);
+        function actualizar() {
+            const s = document.getElementById('scale').value;
+            const rx = document.getElementById('rotX').value;
+            const ry = document.getElementById('rotY').value;
+            const rz = document.getElementById('rotZ').value;
+            
+            document.getElementById('scale-val').innerText = s;
+
+            // Cambiamos solo escala y rotación visual en PC
+            visor.scale = `${s} ${s} ${s}`;
+            visor.orientation = `${rx}deg ${ry}deg ${rz}deg`;
+        }
+
+        function mostrarPresentacion() {
+            const val = (id) => document.getElementById(id).value;
+            let baseUrl = window.location.href.split('index.html')[0].split('?')[0];
+            if (!baseUrl.endsWith('/')) baseUrl += '/';
+            
+            // Pasamos escala multiplicada por 2 para que no salga pequeño
+            let finalUrl = `${baseUrl}ar.html?s=${val('scale')*2}&rx=${val('rotX')}&ry=${val('rotY')}&rz=${val('rotZ')}&px=${val('posX')}&py=${val('posY')}&pz=${val('posZ')}`;
+            
+            qr.clear();
+            qr.makeCode(finalUrl);
+            document.getElementById('presentation-view').style.display = 'flex';
+        }
+        window.onload = actualizar;
     </script>
 </body>
 </html>
