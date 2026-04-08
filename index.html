@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Editor AR Pro - Gotasdequenal</title>
+    <!-- Librerías de A-Frame -->
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
@@ -11,19 +12,21 @@
         .control-group { background: #334155; padding: 12px; border-radius: 12px; border: 1px solid #475569; }
         label { display: block; font-size: 0.7rem; color: #38bdf8; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
         
-        /* GIZMO UI (Flechas de movimiento) */
         .gizmo-ui { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; text-align: center; margin-top: 10px; }
         .btn-gizmo { background: #475569; border: none; color: white; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; }
         .btn-gizmo:hover { background: #38bdf8; color: #0f172a; }
-        .btn-x { border-bottom: 3px solid #ef4444; } /* Rojo - X */
-        .btn-y { border-bottom: 3px solid #22c55e; } /* Verde - Y */
-        .btn-z { border-bottom: 3px solid #3b82f6; } /* Azul - Z */
+        .btn-x { border-bottom: 3px solid #ef4444; }
+        .btn-y { border-bottom: 3px solid #22c55e; }
+        .btn-z { border-bottom: 3px solid #3b82f6; }
 
         input[type="range"] { width: 100%; cursor: pointer; accent-color: #38bdf8; }
         .btn-ar { width: 80px; height: 80px; border-radius: 50%; border: none; cursor: pointer; background: radial-gradient(circle at 30% 30%, #00f2fe, #0077be); color: white; font-weight: bold; align-self: center; margin-top: auto; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
         
-        #preview-zone { flex-grow: 1; position: relative; background: #000; }
+        #preview-zone { flex-grow: 1; position: relative; background: #000; height: 100vh; }
         #presentation-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; color: black; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
+        
+        /* Mensaje de carga */
+        #loading-info { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 5px; font-size: 10px; color: #38bdf8; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -39,14 +42,13 @@
         <div class="control-group">
             <label>MOVIMIENTO (GIZMO)</label>
             <div class="gizmo-ui">
-                <button class="btn-gizmo btn-x" onclick="mover('x', 0.1)">X+</button>
-                <button class="btn-gizmo btn-y" onclick="mover('y', 0.1)">Y+</button>
-                <button class="btn-gizmo btn-z" onclick="mover('z', 0.1)">Z+</button>
-                <button class="btn-gizmo btn-x" onclick="mover('x', -0.1)">X-</button>
-                <button class="btn-gizmo btn-y" onclick="mover('y', -0.1)">Y-</button>
-                <button class="btn-gizmo btn-z" onclick="mover('z', -0.1)">Z-</button>
+                <button class="btn-gizmo btn-x" onclick="mover('x', 0.2)">X+</button>
+                <button class="btn-gizmo btn-y" onclick="mover('y', 0.2)">Y+</button>
+                <button class="btn-gizmo btn-z" onclick="mover('z', 0.2)">Z+</button>
+                <button class="btn-gizmo btn-x" onclick="mover('x', -0.2)">X-</button>
+                <button class="btn-gizmo btn-y" onclick="mover('y', -0.2)">Y-</button>
+                <button class="btn-gizmo btn-z" onclick="mover('z', -0.2)">Z-</button>
             </div>
-            <p style="font-size: 10px; color: #94a3b8; margin-top: 5px;">X: Lat | Y: Alt | Z: Prof</p>
         </div>
 
         <div class="control-group">
@@ -60,35 +62,47 @@
     </div>
 
     <div id="preview-zone">
-        <!-- Escena 3D de previsualización sin cámara activa -->
-        <a-scene embedded vr-mode-ui="enabled: false">
-            <a-assets><a-asset-item id="modelo" src="modelo1.glb"></a-asset-item></a-assets>
+        <div id="loading-info">Esperando modelo1.glb...</div>
+        <a-scene embedded vr-mode-ui="enabled: false" renderer="colorManagement: true;">
+            <a-assets>
+                <!-- Forzamos la carga sin caché -->
+                <a-asset-item id="modelo" src="modelo1.glb"></a-asset-item>
+            </a-assets>
             
-            <a-sky color="#0f172a"></a-sky>
-            <a-entity light="type: ambient; intensity: 1.2;"></a-entity>
-            <a-entity light="type: directional; intensity: 0.8; position: 1 2 1"></a-entity>
+            <a-sky color="#1e293b"></a-sky>
+            
+            <!-- Luces para ver el robot -->
+            <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
+            <a-entity light="type: directional; intensity: 1; position: 1 3 2"></a-entity>
 
-            <!-- Marcador Hiro como Suelo Real -->
-            <a-plane position="0 0 0" rotation="-90 0 0" width="3" height="3" src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg"></a-plane>
-            <a-grid position="0 -0.01 0" rotation="-90 0 0" width="10" height="10" color="#334155"></a-grid>
+            <!-- El Marcador Hiro en el suelo -->
+            <a-plane position="0 0 0" rotation="-90 0 0" width="2" height="2" src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg"></a-plane>
+            
+            <!-- El Robot (ajustado para que sea visible) -->
+            <a-entity id="robot" gltf-model="#modelo" position="0 0 0" scale="1 1 1"></a-entity>
 
-            <!-- El Robot -->
-            <a-entity id="robot" gltf-model="#modelo" position="0 0 0"></a-entity>
-
-            <!-- Cámara de edición fija -->
-            <a-entity position="0 2 4" rotation="-25 0 0"></a-entity>
+            <!-- Cámara colocada para ver el centro -->
+            <a-entity id="cameraRig" position="0 1.5 3">
+                <a-camera look-controls-enabled="false" wasd-controls-enabled="false"></a-camera>
+            </a-entity>
         </a-scene>
     </div>
 
     <div id="presentation-view">
-        <button onclick="document.getElementById('presentation-view').style.display='none'" style="position:absolute; top:20px; left:20px;">Cerrar</button>
-        <div style="border: 50px solid black; padding: 20px;"><img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" width="250"></div>
+        <button onclick="document.getElementById('presentation-view').style.display='none'" style="position:absolute; top:20px; left:20px; padding: 10px; border-radius: 5px; cursor: pointer;">Cerrar</button>
+        <div style="border: 40px solid black; padding: 20px; background: white;"><img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" width="200"></div>
         <div id="qrcode" style="margin-top:20px;"></div>
     </div>
 
     <script>
         var qr = new QRCode(document.getElementById("qrcode"), { width: 250, height: 250 });
         let pos = { x: 0, y: 0, z: 0 };
+
+        // Detectar cuando el modelo carga
+        document.querySelector('#robot').addEventListener('model-loaded', () => {
+            document.getElementById('loading-info').innerText = "Modelo cargado con éxito";
+            document.getElementById('loading-info').style.color = "#22c55e";
+        });
 
         function actualizar() {
             const s = document.getElementById('scale').value;
@@ -99,9 +113,11 @@
             document.getElementById('scale-val').innerText = s;
 
             const robot = document.getElementById('robot');
-            robot.setAttribute('scale', `${s} ${s} ${s}`);
-            robot.setAttribute('rotation', `${rx} ${ry} ${rz}`);
-            robot.setAttribute('position', `${pos.x} ${pos.y} ${pos.z}`);
+            if(robot) {
+                robot.setAttribute('scale', `${s} ${s} ${s}`);
+                robot.setAttribute('rotation', `${rx} ${ry} ${rz}`);
+                robot.setAttribute('position', `${pos.x} ${pos.y} ${pos.z}`);
+            }
         }
 
         function mover(eje, valor) {
@@ -119,7 +135,11 @@
             qr.makeCode(finalUrl);
             document.getElementById('presentation-view').style.display = 'flex';
         }
-        window.onload = actualizar;
+
+        window.onload = () => {
+            // Un pequeño retraso para asegurar que la escena inició
+            setTimeout(actualizar, 500);
+        };
     </script>
 </body>
 </html>
