@@ -6,27 +6,39 @@
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style> 
         body { margin: 0; overflow: hidden; } 
-        #floorMode { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; }
-        .btn-surface { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 200; padding: 15px 30px; background: #00d1ff; border-radius: 50px; border: none; font-weight: bold; }
+        #floorMode { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; background: white; }
+        .btn-surface { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 2000; padding: 15px 30px; background: #00d1ff; border-radius: 50px; border: none; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
+    <!-- MODO 1: MARCADOR HIRO -->
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-        <a-marker preset="hiro"><a-entity id="entidad" gltf-model=""></a-entity></a-marker>
+        <a-marker preset="hiro">
+            <a-entity id="modeloHiro" gltf-model=""></a-entity>
+        </a-marker>
         <a-entity camera></a-entity>
     </a-scene>
 
-    <model-viewer id="floorMode" ar ar-modes="webxr scene-viewer" camera-controls shadow-intensity="1"></model-viewer>
-    <button class="btn-surface" onclick="document.getElementById('floorMode').activateAR()">Ver en superficie plana</button>
+    <!-- MODO 2: SUPERFICIE PLANA (MODEL-VIEWER) -->
+    <model-viewer id="floorMode" ar ar-modes="webxr scene-viewer quick-look" camera-controls></model-viewer>
+    
+    <button class="btn-surface" onclick="activarSuperficie()">Ver en superficie plana</button>
 
     <script>
-        const modelUrl = new URLSearchParams(window.location.search).get('model');
-        document.getElementById('entidad').setAttribute('gltf-model', modelUrl);
-        document.getElementById('floorMode').src = modelUrl;
-        
+        const params = new URLSearchParams(window.location.search);
+        const url = decodeURIComponent(params.get('model'));
+        document.getElementById('modeloHiro').setAttribute('gltf-model', url);
+        const fv = document.getElementById('floorMode');
+        fv.src = url;
+
+        function activarSuperficie() {
+            fv.style.display = 'block';
+            fv.activateAR();
+        }
+
         // Persistencia Hiro
         document.querySelector('a-marker').addEventListener('markerLost', () => {
-            document.getElementById('entidad').setAttribute('visible', 'true');
+            document.getElementById('modeloHiro').setAttribute('visible', 'true');
         });
     </script>
 </body>
