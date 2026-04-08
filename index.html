@@ -3,40 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <title>Visualizador 3D AR - Gotasdequenal</title>
-    <!-- Motores de Alta Fidelidad -->
+    <!-- Motor de Alta Fidelidad -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #050811; color: white; display: flex; height: 100vh; overflow: hidden; }
-        
         #header-title { position: absolute; top: 0; width: 100%; text-align: center; padding: 20px; background: rgba(5, 8, 17, 0.8); backdrop-filter: blur(15px); z-index: 200; border-bottom: 1px solid rgba(56, 189, 248, 0.2); }
-        #header-title h1 { margin: 0; font-size: 1rem; color: #00d1ff; text-transform: uppercase; letter-spacing: 4px; text-shadow: 0 0 15px rgba(0, 209, 255, 0.5); }
+        #header-title h1 { margin: 0; font-size: 1rem; color: #00d1ff; text-transform: uppercase; letter-spacing: 4px; }
 
-        /* PANEL IZQUIERDO (Área de Subida) */
-        #sidebar-left { width: 150px; background: rgba(30, 41, 59, 0.4); border-right: 1px solid rgba(255,255,255,0.1); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        /* SIDEBAR IZQUIERDA (SUBIDA) */
+        #sidebar-left { width: 160px; background: rgba(30, 41, 59, 0.4); border-right: 1px solid rgba(255,255,255,0.1); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .upload-btn { background: #1e293b; border: 2px dashed #00d1ff; padding: 20px; border-radius: 15px; cursor: pointer; color: #00d1ff; font-size: 10px; font-weight: bold; text-align: center; width: 100px; transition: 0.3s; }
         .upload-btn:hover { background: rgba(0, 209, 255, 0.1); transform: scale(1.05); }
 
-        /* CONTROLES ALTURA (Lado Derecho Superior) */
-        #height-controls { position: absolute; top: 120px; right: 130px; display: flex; flex-direction: column; gap: 30px; z-index: 1000; }
-        
+        /* CONTROLES ALTURA (DERECHA) */
+        #height-controls { position: absolute; top: 120px; right: 130px; display: flex; flex-direction: column; gap: 35px; z-index: 1000; }
         .pushable { position: relative; border: none; background: transparent; padding: 0; cursor: pointer; }
-        .shadow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px; background: rgba(0,0,0,0.5); transform: translateY(2px); transition: transform 600ms cubic-bezier(.3, .7, .4, 1); }
+        .shadow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px; background: rgba(0,0,0,0.5); transform: translateY(2px); }
         .edge { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px; }
-        .front { display: block; position: relative; padding: 12px 22px; border-radius: 12px; font-size: 0.8rem; color: white; will-change: transform; transform: translateY(-4px); transition: transform 600ms cubic-bezier(.3, .7, .4, 1); font-weight: bold; }
-        
+        .front { display: block; position: relative; padding: 12px 25px; border-radius: 12px; font-size: 0.8rem; color: white; transform: translateY(-4px); transition: transform 0.1s; font-weight: bold; }
         .edge-up { background: #004e64; } .front-up { background: #00d1ff; }
         .edge-down { background: #4a0072; } .front-down { background: #9d50bb; }
-        .pushable:hover .front { transform: translateY(-6px); }
         .pushable:active .front { transform: translateY(-2px); }
-
         .diagonal-label { font-size: 10px; font-weight: bold; transform: rotate(-25deg); position: absolute; text-transform: uppercase; letter-spacing: 2px; }
 
-        /* SIDEBAR DERECHA (Escala) */
+        /* SIDEBAR DERECHA (ESCALA) */
         #sidebar-right { width: 100px; background: rgba(30, 41, 59, 0.4); border-left: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
-        .vertical-slider { appearance: slider-vertical; width: 6px; height: 300px; background: #334155; outline: none; border-radius: 10px; cursor: pointer; }
+        .vertical-slider { appearance: slider-vertical; width: 6px; height: 300px; background: #334155; outline: none; border-radius: 10px; }
 
-        /* BOTÓN GENERAR QR GALÁCTICO */
+        /* BOTÓN QR ESPACIAL */
         .btn-space {
             display: flex; justify-content: center; align-items: center; width: 18rem; height: 3.5rem; background-size: 300% 300%; backdrop-filter: blur(1rem); border-radius: 5rem; transition: 0.5s; animation: gradient_301 5s ease infinite; border: double 4px transparent;
             background-image: linear-gradient(#212121, #212121), linear-gradient(137.48deg, #ffdb3b 10%, #fe53bb 45%, #8f51ea 67%, #0044ff 87%);
@@ -52,7 +47,6 @@
         #preview-zone { flex-grow: 1; position: relative; }
         model-viewer { width: 100%; height: 100%; background: radial-gradient(#233142, #050811); --poster-color: transparent; }
 
-        /* PANTALLA PRESENTACIÓN QR */
         #presentation { display: none; position: fixed; inset: 0; background: white; z-index: 2000; flex-direction: column; align-items: center; justify-content: center; color: black; }
     </style>
 </head>
@@ -78,7 +72,6 @@
 
     <div id="preview-zone">
         <model-viewer id="visor" src="" camera-controls shadow-intensity="1" environment-image="neutral" exposure="1.2" camera-target="0m 0m 0m"></model-viewer>
-        
         <button class="btn-space" id="generateBtn">
             <div id="container-stars"><div id="stars"></div></div>
             <strong style="color:white; font-size:10px; letter-spacing:3px; z-index:2; font-family:sans-serif;">GENERAR CÓDIGO QR</strong>
@@ -92,27 +85,24 @@
     </div>
 
     <div id="presentation">
-        <button onclick="document.getElementById('presentation').style.display='none'" style="position:absolute; top:30px; left:30px; padding:12px 25px; border-radius:50px; cursor:pointer; font-weight:bold;">← VOLVER</button>
+        <button onclick="document.getElementById('presentation').style.display='none'" style="position:absolute; top:30px; left:30px; padding:12px 25px; border-radius:50px; cursor:pointer; font-weight:bold; background:#eee; border:none;">← VOLVER</button>
         <h2 style="font-family:sans-serif;">LISTO PARA REALIDAD AUMENTADA</h2>
         <div id="qrcode"></div>
-        <p style="font-family:sans-serif; color:#666;">1. Escanea el QR | 2. Apunta al suelo o una mesa plana</p>
+        <p style="font-family:sans-serif; color:#666;">1. Escanea el QR | 2. Apunta al suelo o mesa plana</p>
     </div>
 
     <script>
-        // --- DATOS DE CLOUDINARY YA INTEGRADOS ---
         const CLOUD_NAME = "dudse9ysg"; 
         const UPLOAD_PRESET = "Clase_3d";
 
         const visor = document.getElementById('visor');
         const fileInput = document.getElementById('fileInput');
 
-        // Previsualizar archivo antes de subir
         fileInput.onchange = (e) => {
             const file = e.target.files[0];
             if(file) visor.src = URL.createObjectURL(file);
         };
 
-        // Controles de altura
         document.getElementById('btnUp').onclick = () => {
             const currentY = parseFloat(visor.cameraTarget.split(' ')[1]) || 0;
             visor.cameraTarget = `0m ${currentY + 0.5}m 0m`;
@@ -121,17 +111,14 @@
             const currentY = parseFloat(visor.cameraTarget.split(' ')[1]) || 0;
             visor.cameraTarget = `0m ${currentY - 0.5}m 0m`;
         };
-
-        // Escala
         document.getElementById('scaleInput').oninput = function() {
             visor.scale = `${this.value} ${this.value} ${this.value}`;
             document.getElementById('scale-val').innerText = this.value + "x";
         };
 
-        // Subir y Generar QR
         document.getElementById('generateBtn').onclick = async () => {
             const file = fileInput.files[0];
-            if(!file) return alert("Sube un modelo primero usando el botón de la izquierda");
+            if(!file) return alert("Sube un modelo primero");
             
             const btnText = document.querySelector('.btn-space strong');
             btnText.innerText = "SUBIENDO...";
@@ -145,13 +132,12 @@
                 const data = await res.json();
                 
                 let baseUrl = window.location.href.split('index.html')[0];
-                // Link al visor móvil (view.html)
                 let finalUrl = `${baseUrl}view.html?model=${encodeURIComponent(data.secure_url)}&s=${document.getElementById('scaleInput').value}`;
 
                 document.getElementById('qrcode').innerHTML = "";
                 new QRCode(document.getElementById("qrcode"), { text: finalUrl, width: 320, height: 320 });
                 document.getElementById('presentation').style.display = 'flex';
-            } catch (err) { alert("Error de conexión con Cloudinary"); }
+            } catch (err) { alert("Error al subir"); }
             btnText.innerText = "GENERAR CÓDIGO QR";
         };
     </script>
