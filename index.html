@@ -6,42 +6,33 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; height: 100vh; display: flex; overflow: hidden; }
-        
-        /* PANEL LATERAL */
-        #sidebar { 
-            width: 320px; background: #1e293b; padding: 20px; 
-            border-right: 2px solid #334155; display: flex; 
-            flex-direction: column; gap: 10px; box-sizing: border-box; z-index: 10;
-        }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; height: 100vh; overflow: hidden; }
+        #sidebar { width: 320px; background: #1e293b; padding: 20px; border-right: 2px solid #334155; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
         .control-group { background: #334155; padding: 10px; border-radius: 12px; border: 1px solid #475569; }
         label { display: block; font-size: 0.7rem; color: #38bdf8; margin-bottom: 5px; font-weight: bold; }
         input[type="range"] { width: 100%; cursor: pointer; accent-color: #38bdf8; }
         
-        /* BOTÓN ORBE */
         .btn-orbe {
-            width: 80px; height: 80px; border-radius: 50%; border: none; cursor: pointer;
+            width: 80px; height: 80px; border-radius: 50%; border: none; cursor: move;
             background: radial-gradient(circle at 30% 30%, #00f2fe, #0077be);
             box-shadow: 0 8px 15px rgba(0,0,0,0.4), inset 0 -5px 10px rgba(0,0,0,0.5);
             color: white; font-weight: bold; align-self: center; margin-top: auto;
         }
 
-        /* ZONA VISOR */
-        #preview-zone { flex-grow: 1; position: relative; background: #0f172a; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-        model-viewer { width: 100%; height: 100%; z-index: 5; }
+        #preview-zone { flex-grow: 1; position: relative; background: #0f172a; cursor: grab; }
+        #preview-zone:active { cursor: grabbing; }
+        model-viewer { width: 100%; height: 100%; --poster-color: transparent; }
 
         #stage-floor {
-            position: absolute; width: 300px; height: 300px; background: white; border: 20px solid black;
+            position: absolute; width: 400px; height: 400px; background: white; border: 25px solid black;
             display: flex; align-items: center; justify-content: center;
-            transform: rotateX(75deg); bottom: 15%; z-index: 1;
+            transform: rotateX(80deg); bottom: 10%; left: 50%; margin-left: -200px; z-index: 1; pointer-events: none;
         }
-        #stage-floor span { color: black; font-size: 3rem; font-weight: bold; font-family: Arial; }
+        #stage-floor span { color: black; font-size: 5rem; font-weight: bold; font-family: Arial; }
 
-        /* PANTALLA HIRO */
         #presentation-view {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; color: black; z-index: 1000;
-            flex-direction: column; align-items: center; justify-content: center;
+            background: white; color: black; z-index: 1000; flex-direction: column; align-items: center; justify-content: center;
         }
     </style>
 </head>
@@ -52,51 +43,60 @@
         
         <div class="control-group">
             <label>ESCALA: <span id="scale-val">1.0</span>x</label>
-            <input type="range" id="scale" min="0.1" max="10" step="0.1" value="1" oninput="actualizar()">
+            <input type="range" id="scale" min="0.1" max="15" step="0.1" value="1" oninput="actualizar()">
         </div>
-
         <div class="control-group">
-            <label>POSICIÓN (X, Y, Z)</label>
-            <input type="range" id="posX" min="-5" max="5" step="0.1" value="0" oninput="actualizar()">
-            <input type="range" id="posY" min="-2" max="5" step="0.1" value="0" oninput="actualizar()">
-            <input type="range" id="posZ" min="-5" max="5" step="0.1" value="0" oninput="actualizar()">
+            <label>POSICIÓN (Arrastra con el Mouse)</label>
+            <label>ALTURA (Y): <span id="posY-val">0</span></label>
+            <input type="range" id="posY" min="-1" max="5" step="0.1" value="0" oninput="actualizar()">
         </div>
-
         <div class="control-group">
             <label>ROTACIÓN (X, Y, Z)</label>
             <input type="range" id="rotX" min="-180" max="180" value="0" oninput="actualizar()">
             <input type="range" id="rotY" min="-180" max="180" value="0" oninput="actualizar()">
             <input type="range" id="rotZ" min="-180" max="180" value="0" oninput="actualizar()">
         </div>
-
         <button class="btn-orbe" onclick="mostrarPresentacion()">AR</button>
     </div>
 
-    <div id="preview-zone">
+    <div id="preview-zone" onmousedown="startDrag(event)" onmousemove="doDrag(event)" onmouseup="endDrag()" onmouseleave="endDrag()">
         <div id="stage-floor"><span>Hiro</span></div>
-        <model-viewer id="visor" src="modelo1.glb" interaction-prompt="none" shadow-intensity="1" camera-controls auto-rotate></model-viewer>
+        <model-viewer id="visor" src="modelo1.glb" interaction-prompt="none"></model-viewer>
     </div>
 
     <div id="presentation-view">
         <button onclick="document.getElementById('presentation-view').style.display='none'" style="position:absolute; top:20px; left:20px;">VOLVER</button>
-        <div style="border: 40px solid black; padding: 20px; background: white;"><img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" width="200"></div>
+        <div style="border: 45px solid black; padding: 20px; background: white;"><img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" width="220"></div>
         <div id="qrcode" style="margin-top:20px;"></div>
     </div>
 
     <script>
-        var qr = new QRCode(document.getElementById("qrcode"), { width: 220, height: 220 });
+        var qr = new QRCode(document.getElementById("qrcode"), { width: 250, height: 250 });
         const visor = document.getElementById('visor');
+        let dragging = false;
+        let px = 0, pz = 0;
+
+        function startDrag(e) { if(e.target.id === "preview-zone") dragging = true; }
+        function endDrag() { dragging = false; }
+        function doDrag(e) {
+            if(!dragging) return;
+            px += e.movementX * 0.01;
+            pz += e.movementY * 0.01;
+            actualizar();
+        }
 
         function actualizar() {
             const s = document.getElementById('scale').value;
+            const py = document.getElementById('posY').value;
             const rx = document.getElementById('rotX').value;
             const ry = document.getElementById('rotY').value;
             const rz = document.getElementById('rotZ').value;
             
             document.getElementById('scale-val').innerText = s;
+            document.getElementById('posY-val').innerText = py;
 
-            // Cambiamos solo escala y rotación visual en PC
-            visor.scale = `${s} ${s} ${s}`;
+            // Visual en PC
+            visor.style.transform = `scale(${s}) translate(${px*50}px, ${pz*50}px)`;
             visor.orientation = `${rx}deg ${ry}deg ${rz}deg`;
         }
 
@@ -104,10 +104,8 @@
             const val = (id) => document.getElementById(id).value;
             let baseUrl = window.location.href.split('index.html')[0].split('?')[0];
             if (!baseUrl.endsWith('/')) baseUrl += '/';
-            
-            // Pasamos escala multiplicada por 2 para que no salga pequeño
-            let finalUrl = `${baseUrl}ar.html?s=${val('scale')*2}&rx=${val('rotX')}&ry=${val('rotY')}&rz=${val('rotZ')}&px=${val('posX')}&py=${val('posY')}&pz=${val('posZ')}`;
-            
+            // Enviamos posición real calculada del mouse
+            let finalUrl = `${baseUrl}ar.html?s=${val('scale')}&rx=${val('rotX')}&ry=${val('rotY')}&rz=${val('rotZ')}&px=${px.toFixed(2)}&py=${py}&pz=${pz.toFixed(2)}`;
             qr.clear();
             qr.makeCode(finalUrl);
             document.getElementById('presentation-view').style.display = 'flex';
