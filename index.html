@@ -15,97 +15,69 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #050811; color: white; display: flex; height: 100vh; overflow: hidden; }
-        
         #header-title { position: absolute; top: 0; width: 100%; text-align: center; padding: 20px; background: rgba(5, 8, 17, 0.8); backdrop-filter: blur(15px); z-index: 200; border-bottom: 1px solid rgba(56, 189, 248, 0.2); }
         #header-title h1 { margin: 0; font-size: 1rem; color: #00d1ff; text-transform: uppercase; letter-spacing: 4px; }
-
-        /* SIDEBAR IZQUIERDA */
         #sidebar-left { width: 180px; background: rgba(30, 41, 59, 0.4); border-right: 1px solid rgba(255,255,255,0.1); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px; }
         .upload-btn { background: #1e293b; border: 2px dashed #00d1ff; padding: 15px; border-radius: 12px; cursor: pointer; color: #00d1ff; font-size: 10px; font-weight: bold; text-align: center; width: 100px; }
-
-        /* BOTÓN ELIMINAR */
-        .btn-delete { position: relative; padding: 12px 25px; background: #fec195; font-size: 11px; font-weight: bold; color: #181818; border: 2px solid #fec195; border-radius: 8px; cursor: pointer; transition: 0.3s; }
-        .btn-delete:hover { background: transparent; color: #fec195; box-shadow: 0 0 20px rgba(254, 193, 149, 0.5); }
-
-        /* CONTROLES ALTURA (DERECHA) */
-        #height-controls { position: absolute; top: 120px; right: 130px; display: flex; flex-direction: column; gap: 35px; z-index: 1000; }
+        .btn-delete { position: relative; padding: 10px 20px; background: #fec195; font-size: 11px; font-weight: bold; color: #181818; border: 2px solid #fec195; border-radius: 8px; cursor: pointer; }
+        .star { position: absolute; width: 10px; opacity: 0; transition: 0.5s; fill: #fffdef; }
+        .btn-delete:hover .star { opacity: 1; }
+        .btn-delete:hover .s1 { top: -15px; left: -5px; } .btn-delete:hover .s2 { top: 25px; left: 75px; }
+        #height-controls { position: absolute; top: 100px; right: 130px; display: flex; flex-direction: column; gap: 30px; z-index: 1000; }
         .pushable { position: relative; border: none; background: transparent; padding: 0; cursor: pointer; }
         .shadow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px; background: rgba(0,0,0,0.5); transform: translateY(2px); }
         .edge { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px; }
-        .front { display: block; position: relative; padding: 12px 25px; border-radius: 12px; font-size: 0.8rem; color: white; will-change: transform; transform: translateY(-4px); transition: transform 0.1s; font-weight: bold; }
+        .front { display: block; position: relative; padding: 12px 25px; border-radius: 12px; font-size: 0.8rem; color: white; transform: translateY(-4px); transition: transform 0.1s; font-weight: bold; }
         .edge-up { background: #004e64; } .front-up { background: #00d1ff; }
         .edge-down { background: #4a0072; } .front-down { background: #9d50bb; }
-        .pushable:active .front { transform: translateY(-2px); }
-
-        /* SIDEBAR DERECHA */
         #sidebar-right { width: 100px; background: rgba(30, 41, 59, 0.4); border-left: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
-        .vertical-slider { appearance: slider-vertical; width: 6px; height: 300px; background: #334155; outline: none; border-radius: 10px; cursor: pointer; }
-
-        /* BOTÓN GENERAR QR (ESTILO SPACE GALÁCTICO) */
-        .btn-space {
-            display: flex; justify-content: center; align-items: center; width: 14rem; overflow: hidden; height: 3.5rem; background-size: 300% 300%; backdrop-filter: blur(1rem); border-radius: 5rem; transition: 0.5s; animation: gradient_301 5s ease infinite; border: double 4px transparent;
-            background-image: linear-gradient(#212121, #212121), linear-gradient(137.48deg, #ffdb3b 10%, #fe53bb 45%, #8f51ea 67%, #0044ff 87%);
-            background-origin: border-box; background-clip: content-box, border-box;
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; cursor: pointer;
-        }
-        #container-stars { position: absolute; z-index: -1; width: 100%; height: 100%; overflow: hidden; transition: 0.5s; backdrop-filter: blur(1rem); border-radius: 5rem; }
-        strong { z-index: 2; font-family: sans-serif; font-size: 11px; letter-spacing: 2px; color: #ffffff; text-shadow: 0 0 4px white; }
-        #stars { position: relative; background: transparent; width: 200rem; height: 200rem; }
-        #stars::after { content: ""; position: absolute; top: -10rem; left: -100rem; width: 100%; height: 100%; animation: animStarRotate 90s linear infinite; background-image: radial-gradient(#ffffff 1px, transparent 1%); background-size: 50px 50px; }
-        @keyframes animStarRotate { from { transform: rotate(360deg); } to { transform: rotate(0); } }
+        .vertical-slider { appearance: slider-vertical; width: 6px; height: 300px; background: #334155; outline: none; border-radius: 10px; }
+        .btn-space { display: flex; justify-content: center; align-items: center; width: 16rem; height: 3.5rem; background-size: 300% 300%; border-radius: 5rem; animation: gradient_301 5s ease infinite; border: double 4px transparent; background-image: linear-gradient(#212121, #212121), linear-gradient(137.48deg, #ffdb3b 10%, #fe53bb 45%, #8f51ea 67%, #0044ff 87%); background-origin: border-box; background-clip: content-box, border-box; position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; cursor: pointer; }
         @keyframes gradient_301 { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        .btn-space:hover { transform: translateX(-50%) scale(1.1); }
-
         #container3d { flex-grow: 1; position: relative; }
         #presentation { display: none; position: fixed; inset: 0; background: white; z-index: 2000; flex-direction: row; align-items: center; justify-content: center; gap: 80px; color: black; }
     </style>
 </head>
 <body>
-
+    <div id="custom-cursor" style="position:fixed; pointer-events:none; z-index:9999; opacity:0; display:flex; flex-direction:column; align-items:center;">
+        <div style="width:25px; height:35px; border:2px solid white; border-radius:12px; background:rgba(0,0,0,0.8); position:relative;">
+            <div style="position:absolute; top:0; left:0; width:50%; height:40%; background:#f59aff; border-radius:8px 0 0 0;"></div>
+            <div style="position:absolute; top:0; right:0; width:50%; height:40%; background:#38bdf8; border-radius:0 8px 0 0;"></div>
+        </div>
+        <div style="margin-top:5px; display:flex; gap:10px; font-size:10px; font-weight:bold; background:rgba(0,0,0,0.7); padding:4px; border-radius:5px;"><span style="color:#f59aff">ROTAR</span><span style="color:#38bdf8">MOVER</span></div>
+    </div>
     <div id="header-title"><h1>Visualizador de modelo 3D con realidad aumentada</h1></div>
-
     <div id="sidebar-left">
         <div class="upload-btn" onclick="document.getElementById('fileInput').click()" id="upload-txt">SUBIR ARCHIVO (GLB)</div>
         <input type="file" id="fileInput" hidden accept=".glb">
-        <button class="btn-delete" id="deleteBtn">ELIMINAR</button>
+        <button class="btn-delete" id="deleteBtn">ELIMINAR<svg class="star s1" viewBox="0 0 784 815"><path d="M392 0L583 260L784 392L583 523L392 815L200 523L0 392L200 260L392 0Z"/></svg><svg class="star s2" viewBox="0 0 784 815"><path d="M392 0L583 260L784 392L583 523L392 815L200 523L0 392L200 260L392 0Z"/></svg></button>
     </div>
-
     <div id="height-controls">
         <button class="pushable" id="btnUp"><span class="shadow"></span><span class="edge edge-up"></span><span class="front front-up">SUBIR</span></button>
         <button class="pushable" id="btnDown"><span class="shadow"></span><span class="edge edge-down"></span><span class="front front-down">BAJAR</span></button>
     </div>
-
     <div id="container3d"></div>
-
     <div id="sidebar-right">
-        <span style="writing-mode: vertical-rl; margin-bottom: 15px; font-size: 11px; color: #00d1ff; font-weight: bold; letter-spacing: 2px;">ESCALAR DISEÑO</span>
-        <input type="range" id="scaleInput" class="vertical-slider" min="0.1" max="20" step="0.1" value="1">
+        <span style="writing-mode: vertical-rl; margin-bottom: 15px; font-size: 11px; color: #00d1ff; font-weight: bold;">ESCALAR DISEÑO</span>
+        <input type="range" id="scaleInput" class="vertical-slider" min="0.1" max="15" step="0.1" value="1">
         <div id="scale-val" style="margin-top:10px; font-weight:bold; color:#00d1ff;">1.0x</div>
     </div>
-
-    <button class="btn-space" id="generateBtn">
-        <div id="container-stars"><div id="stars"></div></div>
-        <strong>GENERAR CÓDIGO QR</strong>
-    </button>
-
+    <button class="btn-space" id="generateBtn"><strong style="color:white; font-size:10px; letter-spacing:2px; z-index:2;">GENERAR CÓDIGO QR</strong></button>
     <div id="presentation">
-        <button id="closeBtn" style="position:absolute; top:30px; left:30px; padding:12px 25px; border-radius:50px; cursor:pointer; font-weight:bold; border: 1px solid #ccc; background: white;">← VOLVER</button>
+        <button id="closeBtn" style="position:absolute; top:30px; left:30px; padding:12px 25px; border-radius:50px; cursor:pointer; font-weight:bold;">← VOLVER</button>
         <div style="text-align:center"><h3>1. ESCANEA EL QR</h3><div id="qrcode"></div></div>
         <div style="text-align:center"><h3>2. APUNTA AL MARCADOR</h3><img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" style="border:40px solid black; width:280px;"></div>
     </div>
-
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
         let scene, camera, renderer, controls, robot;
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
         let isDragging = false, isRotating = false;
-
+        const hud = document.getElementById('custom-cursor');
         init();
-
         function init() {
             scene = new THREE.Scene(); scene.background = new THREE.Color(0x050811);
             camera = new THREE.PerspectiveCamera(45, (window.innerWidth - 280) / window.innerHeight, 0.1, 1000);
@@ -116,81 +88,57 @@
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
             renderer.toneMappingExposure = 1.4;
             document.getElementById('container3d').appendChild(renderer.domElement);
-
-            scene.add(new THREE.AmbientLight(0xffffff, 2));
+            scene.add(new THREE.AmbientLight(0xffffff, 1.8));
             const sun = new THREE.DirectionalLight(0xffffff, 2.5); sun.position.set(5, 15, 10); scene.add(sun);
             scene.add(new THREE.GridHelper(15, 30, 0x1e293b, 0x0f172a));
-
             new THREE.TextureLoader().load('https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg', (t) => {
                 const marker = new THREE.Mesh(new THREE.PlaneGeometry(3, 3), new THREE.MeshBasicMaterial({ map: t }));
                 marker.rotation.x = -Math.PI / 2; scene.add(marker);
             });
-
             const loader = new GLTFLoader();
             document.getElementById('fileInput').onchange = (e) => {
                 const file = e.target.files[0];
                 if(file) {
                     if(robot) scene.remove(robot);
-                    loader.load(URL.createObjectURL(file), (g) => { 
-                        robot = g.scene; scene.add(robot); 
-                        document.getElementById('upload-txt').innerText = "LISTO";
-                    });
+                    loader.load(URL.createObjectURL(file), (g) => { robot = g.scene; scene.add(robot); });
                 }
             };
-
-            document.getElementById('deleteBtn').onclick = () => {
-                if(robot) { scene.remove(robot); robot = null; }
-                document.getElementById('fileInput').value = "";
-                document.getElementById('upload-txt').innerText = "SUBIR ARCHIVO (GLB)";
-            };
-
+            document.getElementById('deleteBtn').onclick = () => { if(robot) { scene.remove(robot); robot = null; } };
             controls = new OrbitControls(camera, renderer.domElement);
             window.addEventListener('mousemove', (e) => {
+                hud.style.left = e.clientX + 'px'; hud.style.top = e.clientY + 'px';
                 mouse.x = ((e.clientX - 180) / (window.innerWidth - 280)) * 2 - 1;
                 mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
                 raycaster.setFromCamera(mouse, camera);
-                if(robot && isDragging){
-                    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -robot.position.y);
-                    const pt = new THREE.Vector3(); raycaster.ray.intersectPlane(plane, pt);
-                    robot.position.x = pt.x; robot.position.z = pt.z;
+                if(robot){
+                    const hits = raycaster.intersectObject(robot, true);
+                    if(hits.length > 0){ hud.style.opacity = "1"; document.body.style.cursor = "none"; }
+                    else { hud.style.opacity = "0"; document.body.style.cursor = "default"; }
+                    if(isDragging){
+                        const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -robot.position.y);
+                        const pt = new THREE.Vector3(); raycaster.ray.intersectPlane(plane, pt);
+                        robot.position.x = pt.x; robot.position.z = pt.z;
+                    }
+                    if(isRotating){ robot.rotation.y += e.movementX * 0.01; robot.rotation.x += e.movementY * 0.01; }
                 }
-                if(robot && isRotating){ robot.rotation.y += e.movementX * 0.01; robot.rotation.x += e.movementY * 0.01; }
             });
             window.addEventListener('mousedown', (e) => { if(robot && raycaster.intersectObject(robot, true).length > 0){ controls.enabled = false; if(e.button === 0) isRotating = true; if(e.button === 2) isDragging = true; } });
             window.addEventListener('mouseup', () => { controls.enabled = true; isDragging = isRotating = false; });
             function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
             animate();
         }
-
         document.getElementById('btnUp').onclick = () => { if(robot) robot.position.y += 0.2; };
         document.getElementById('btnDown').onclick = () => { if(robot) robot.position.y -= 0.2; };
         document.getElementById('scaleInput').oninput = function() { if(robot) { robot.scale.set(this.value, this.value, this.value); document.getElementById('scale-val').innerText = this.value + "x"; } };
-
         document.getElementById('generateBtn').onclick = async () => {
             const file = document.getElementById('fileInput').files[0];
             if(!file) return alert("Sube un modelo primero");
-            
-            const btnStrong = document.querySelector('.btn-space strong');
-            btnStrong.innerText = "SUBIENDO...";
-
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', "Clase_3d");
-
-            try {
-                // Endpoint corregido para Cloudinary
-                const res = await fetch(`https://api.cloudinary.com/v1_1/dudse9ysg/auto/upload`, { method: 'POST', body: formData });
-                const data = await res.json();
-                
-                if(data.secure_url) {
-                    let baseUrl = window.location.href.split('index.html')[0];
-                    let finalUrl = `${baseUrl}view.html?model=${encodeURIComponent(data.secure_url)}&s=${document.getElementById('scaleInput').value}&px=${robot.position.x}&py=${robot.position.y}&pz=${robot.position.z}&rx=${robot.rotation.x}&ry=${robot.rotation.y}&rz=${robot.rotation.z}`;
-                    document.getElementById('qrcode').innerHTML = "";
-                    new QRCode(document.getElementById("qrcode"), { text: finalUrl, width: 300, height: 300 });
-                    document.getElementById('presentation').style.display = 'flex';
-                } else { alert("Error en la respuesta de Cloudinary"); }
-            } catch (err) { alert("Error al subir el archivo"); }
-            btnStrong.innerText = "GENERAR CÓDIGO QR";
+            const formData = new FormData(); formData.append('file', file); formData.append('upload_preset', "Clase_3d");
+            const res = await fetch(`https://api.cloudinary.com/v1_1/dudse9ysg/auto/upload`, { method: 'POST', body: formData });
+            const data = await res.json();
+            let finalUrl = `${window.location.href.split('index.html')[0]}view.html?model=${encodeURIComponent(data.secure_url)}&s=${document.getElementById('scaleInput').value}&px=${robot.position.x}&py=${robot.position.y}&pz=${robot.position.z}&rx=${robot.rotation.x}&ry=${robot.rotation.y}&rz=${robot.rotation.z}`;
+            document.getElementById('qrcode').innerHTML = ""; new QRCode(document.getElementById("qrcode"), { text: finalUrl, width: 300, height: 300 });
+            document.getElementById('presentation').style.display = 'flex';
         };
         document.getElementById('closeBtn').onclick = () => document.getElementById('presentation').style.display = 'none';
     </script>
