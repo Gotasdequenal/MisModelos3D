@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Visualizador de modelo 3D para realidad aumentada</title>
+    <!-- Motores 3D Profesionales -->
     <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
     <script type="importmap">
     {
@@ -16,59 +17,68 @@
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0b0f1a; color: white; display: flex; height: 100vh; overflow: hidden; }
         
-        /* IZQUIERDA: ALTURA */
-        #sidebar-left { width: 80px; background: #1e293b; border-right: 1px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; z-index: 100; }
-        .btn-height { width: 55px; height: 55px; border-radius: 12px; border: none; background: #22c55e; color: white; font-size: 20px; cursor: pointer; border-bottom: 4px solid #14532d; font-weight: bold; }
-        .btn-height:active { border-bottom: none; transform: translateY(2px); }
+        /* IZQUIERDA: CONTROL DE ALTURA (EJE Y) */
+        #sidebar-left { width: 90px; background: #1e293b; border-right: 1px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; z-index: 100; }
+        .btn-height { width: 60px; height: 60px; border-radius: 15px; border: none; color: white; font-size: 24px; cursor: pointer; font-weight: bold; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        #btnUp { background: #22c55e; border-bottom: 5px solid #14532d; }
+        #btnDown { background: #ef4444; border-bottom: 5px solid #7f1d1d; }
+        .btn-height:active { border-bottom: none; transform: translateY(4px); }
+        .label-y { font-size: 11px; font-weight: bold; color: #38bdf8; text-transform: uppercase; margin-top: 5px; }
 
         /* DERECHA: ESCALA */
         #sidebar-right { width: 100px; background: #1e293b; border-left: 1px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
-        .vertical-slider { appearance: slider-vertical; width: 8px; height: 300px; background: #475569; outline: none; cursor: pointer; }
-        .scale-txt { margin-top: 15px; font-weight: bold; color: #ef4444; font-size: 14px; }
+        .vertical-slider { appearance: slider-vertical; width: 8px; height: 350px; background: #475569; outline: none; cursor: pointer; }
+        .scale-txt { margin-top: 15px; font-weight: bold; color: #38bdf8; font-size: 14px; }
 
-        /* VISOR */
+        /* CENTRO: VISOR 3D */
         #container3d { flex-grow: 1; position: relative; }
-        .hint { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 5px; font-size: 10px; color: #94a3b8; pointer-events: none; }
+        .hint { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 8px; font-size: 10px; color: #94a3b8; pointer-events: none; border: 1px solid #334155; }
 
-        /* BOTÓN 86 */
+        /* BOTÓN GENERAR QR */
         .button-86 { all: unset; width: 220px; height: 45px; font-size: 14px; background: transparent; border: none; position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); color: white; cursor: pointer; z-index: 100; padding: 10px 20px; display: flex; align-items: center; justify-content: center; white-space: nowrap; font-weight: bold; }
         .button-86::before { content: ''; position: absolute; bottom: 0; right: 0; z-index: -1; transition: all .4s; width: 100%; height: 100%; background: #0ea5e9; border-radius: 10px; }
         .button-86::after { content: ''; position: absolute; bottom: 0; right: 0; z-index: -1; transition: all .4s; transform: translate(10px, 10px); width: 35px; height: 35px; background: #ffffff20; backdrop-filter: blur(5px); border-radius: 50px; }
-        .button-86:hover::before { background: #38bdf8; }
+        .button-86:hover::before { background: #38bdf8; width: 105%; height: 105%; }
 
-        #presentation-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; color: black; z-index: 1000; flex-direction: row; align-items: center; justify-content: center; gap: 60px; }
-        .hiro-marker { border: 45px solid black; padding: 10px; width: 280px; height: 280px; }
+        /* VISTA QR + HIRO */
+        #presentation-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; color: black; z-index: 1000; flex-direction: row; align-items: center; justify-content: center; gap: 80px; }
+        .hiro-marker { border: 45px solid black; padding: 15px; width: 300px; height: 300px; }
     </style>
 </head>
 <body>
 
+    <!-- BARRA IZQUIERDA: MOVIMIENTO VERTICAL -->
     <div id="sidebar-left">
-        <span style="font-size: 10px; color: #22c55e; font-weight: bold;">SUBIR</span>
+        <span class="label-y">Subir</span>
         <button class="btn-height" id="btnUp">▲</button>
-        <button class="btn-height" id="btnDown" style="background: #ef4444; border-bottom-color: #7f1d1d;">▼</button>
-        <span style="font-size: 10px; color: #ef4444; font-weight: bold;">BAJAR</span>
+        <button class="btn-height" id="btnDown">▼</button>
+        <span class="label-y">Bajar</span>
+        <div style="margin-top:20px; font-size: 10px; color: #94a3b8; text-align: center;">ALTURA<br>EJE Y</div>
     </div>
 
+    <!-- VISOR CENTRAL -->
     <div id="container3d">
-        <div class="hint">🖱️ Izq: Rotar | 🖱️ Der: Mover X-Z | ⚙️ Rueda: Zoom</div>
+        <div class="hint">🖱️ Izq: Rotar | 🖱️ Der: Mover | ⚙️ Rueda: Zoom</div>
     </div>
 
+    <!-- BARRA DERECHA: ESCALA -->
     <div id="sidebar-right">
-        <span style="writing-mode: vertical-rl; margin-bottom: 10px; font-size: 12px; color: #38bdf8; font-weight: bold;">ESCALA MBOT</span>
-        <input type="range" id="scaleInput" class="vertical-slider" min="0.1" max="10" step="0.1" value="1">
+        <span style="writing-mode: vertical-rl; margin-bottom: 15px; font-size: 12px; color: #38bdf8; font-weight: bold; letter-spacing: 2px;">ESCALA MBOT</span>
+        <input type="range" id="scaleInput" class="vertical-slider" min="0.1" max="15" step="0.1" value="1">
         <div id="scale-val" class="scale-txt">1.0x</div>
     </div>
 
     <button class="button-86" id="generateBtn">GENERAR CÓDIGO QR</button>
 
+    <!-- PANTALLA DE PRESENTACIÓN -->
     <div id="presentation-view">
-        <button id="closeBtn" style="position:absolute; top:20px; left:20px; padding:10px; border-radius: 10px; cursor:pointer;">← Volver</button>
+        <button id="closeBtn" style="position:absolute; top:30px; left:30px; padding:12px 25px; border-radius: 50px; cursor:pointer; font-weight:bold; border: 1px solid #ccc; background: white;">← VOLVER AL EDITOR</button>
         <div style="text-align:center">
-            <h3>1. ESCANEA EL QR</h3>
+            <h3 style="font-family: sans-serif;">1. ESCANEA EL QR</h3>
             <div id="qrcode"></div>
         </div>
         <div style="text-align:center">
-            <h3>2. APUNTA AL MARCADOR</h3>
+            <h3 style="font-family: sans-serif;">2. APUNTA AL MARCADOR</h3>
             <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="hiro-marker">
         </div>
     </div>
@@ -78,7 +88,7 @@
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-        let scene, camera, renderer, controls, robot, marker;
+        let scene, camera, renderer, controls, robot;
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
         let isDraggingModel = false, isRotatingModel = false;
@@ -88,43 +98,39 @@
         function init() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0f172a);
-            camera = new THREE.PerspectiveCamera(45, (window.innerWidth - 180) / window.innerHeight, 0.1, 1000);
+
+            camera = new THREE.PerspectiveCamera(45, (window.innerWidth - 190) / window.innerHeight, 0.1, 1000);
             camera.position.set(0, 2, 5);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth - 180, window.innerHeight);
+            renderer.setSize(window.innerWidth - 190, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.outputColorSpace = THREE.SRGBColorSpace;
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.3;
+            renderer.toneMappingExposure = 1.2;
             document.getElementById('container3d').appendChild(renderer.domElement);
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
-            scene.add(ambientLight);
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
-            directionalLight.position.set(5, 10, 7.5);
-            scene.add(directionalLight);
+            // ILUMINACIÓN PROFESIONAL
+            scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+            const sun = new THREE.DirectionalLight(0xffffff, 2);
+            sun.position.set(5, 10, 7.5);
+            scene.add(sun);
 
-            const grid = new THREE.GridHelper(10, 20, 0x444444, 0x222222);
-            scene.add(grid);
-            
-            // EJES PRO: Rojo(X), Verde(Y), Azul(Z)
-            const axesHelper = new THREE.AxesHelper(5);
-            scene.add(axesHelper);
+            // GRILLA Y EJES
+            scene.add(new THREE.GridHelper(10, 20, 0x444444, 0x222222));
+            scene.add(new THREE.AxesHelper(5));
 
-            // MARCADOR HIRO
+            // MARCADOR HIRO (BASE)
             new THREE.TextureLoader().load('https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg', (txt) => {
-                const geo = new THREE.PlaneGeometry(2, 2);
-                marker = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: txt }));
+                const marker = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2.5), new THREE.MeshBasicMaterial({ map: txt }));
                 marker.rotation.x = -Math.PI / 2;
                 marker.position.y = 0.005;
                 scene.add(marker);
             });
 
-            const loader = new GLTFLoader();
-            loader.load('modelo1.glb', (gltf) => {
+            // CARGAR MODELO
+            new GLTFLoader().load('modelo1.glb', (gltf) => {
                 robot = gltf.scene;
-                robot.position.set(0, 0, 0);
                 scene.add(robot);
             });
 
@@ -139,7 +145,7 @@
         }
 
         function onMouseDown(e) {
-            mouse.x = ((e.clientX - 80) / (window.innerWidth - 180)) * 2 - 1;
+            mouse.x = ((e.clientX - 90) / (window.innerWidth - 190)) * 2 - 1;
             mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
             if(robot) {
@@ -160,21 +166,20 @@
         function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
 
         function onWindowResize() {
-            camera.aspect = (window.innerWidth - 180) / window.innerHeight;
+            camera.aspect = (window.innerWidth - 190) / window.innerHeight;
             camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth - 180, window.innerHeight);
+            renderer.setSize(window.innerWidth - 190, window.innerHeight);
         }
 
-        // ACCIONES
+        // --- ACCIONES DE BOTONES ---
+        document.getElementById('btnUp').onclick = () => { if(robot) robot.position.y += 0.1; };
+        document.getElementById('btnDown').onclick = () => { if(robot) robot.position.y -= 0.1; };
+        
         document.getElementById('scaleInput').oninput = function() {
             const s = this.value;
             document.getElementById('scale-val').innerText = s + "x";
             if(robot) robot.scale.set(s, s, s);
         };
-
-        // MOVIMIENTO EN EJE VERDE (ALTURA)
-        document.getElementById('btnUp').onclick = () => { if(robot) robot.position.y += 0.1; };
-        document.getElementById('btnDown').onclick = () => { if(robot) robot.position.y -= 0.1; };
 
         document.getElementById('generateBtn').onclick = () => {
             const s = document.getElementById('scaleInput').value;
@@ -184,9 +189,10 @@
             if (!baseUrl.endsWith('/')) baseUrl += '/';
             let finalUrl = `${baseUrl}ar.html?s=${s}&px=${px}&py=${py}&pz=${pz}&rx=${rx}&ry=${ry}&rz=${rz}`;
             document.getElementById('qrcode').innerHTML = "";
-            new QRCode(document.getElementById("qrcode"), { text: finalUrl, width: 280, height: 280 });
+            new QRCode(document.getElementById("qrcode"), { text: finalUrl, width: 300, height: 300 });
             document.getElementById('presentation-view').style.display = 'flex';
         };
+
         document.getElementById('closeBtn').onclick = () => document.getElementById('presentation-view').style.display = 'none';
     </script>
 </body>
