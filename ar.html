@@ -11,23 +11,25 @@
     </style>
 </head>
 <body style="margin: 0; background: transparent;">
+    <!-- Renderizado con máxima calidad física -->
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; patternRatio: 0.5;" vr-mode-ui="enabled: false" renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true;">
         
         <a-assets><a-asset-item id="modelo" src="modelo1.glb"></a-asset-item></a-assets>
         
-        <a-entity light="type: ambient; intensity: 1.8;"></a-entity>
+        <!-- Luces idénticas al PC para detalles máximos -->
+        <a-entity light="type: ambient; intensity: 2;"></a-entity>
         <a-entity light="type: directional; intensity: 1.5; position: 1 4 3;"></a-entity>
-        
-        <a-marker preset="hiro">
+
+        <!-- Script de PERSISTENCIA: Si el marcador se pierde, no ocultar el modelo -->
+        <a-marker preset="hiro" id="marker" emitevents="true">
             <a-entity id="entidad" gltf-model="#modelo"></a-entity>
         </a-marker>
+        
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
         const p = new URLSearchParams(window.location.search);
-        
-        // CALIBRACIÓN PRECISA: 0.45 hace que el robot tenga el mismo tamaño que en la PC
         const s = parseFloat(p.get('s') || "1") * 0.45; 
         const px = p.get('px') || "0";
         const py = p.get('py') || "0";
@@ -40,6 +42,13 @@
         el.setAttribute('scale', `${s} ${s} ${s}`);
         el.setAttribute('position', `${px} ${py} ${pz}`);
         el.setAttribute('rotation', `${rx} ${ry} ${rz}`);
+
+        // LÓGICA DE PERSISTENCIA
+        const marker = document.getElementById('marker');
+        marker.addEventListener('markerLost', () => {
+            // Forzamos que la entidad siga siendo visible aunque se pierda el marcador
+            el.setAttribute('visible', 'true');
+        });
     </script>
 </body>
 </html>
