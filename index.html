@@ -3,148 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <title>Visualizador de modelo 3D para realidad aumentada</title>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://unpkg.com/aframe-orbit-controls@1.3.2/dist/aframe-orbit-controls.min.js"></script>
+    <!-- Motor de Alta Fidelidad de Google -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; height: 100vh; overflow: hidden; }
-        #sidebar { width: 340px; background: #1e293b; padding: 20px; border-right: 2px solid #334155; display: flex; flex-direction: column; gap: 8px; z-index: 100; overflow-y: auto; }
-        .control-group { background: #334155; padding: 12px; border-radius: 12px; border: 1px solid #475569; }
-        label { display: block; font-size: 0.65rem; color: #38bdf8; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
         
-        input[type="range"] { width: 100%; cursor: pointer; height: 6px; border-radius: 5px; appearance: none; background: #475569; outline: none; margin-bottom: 8px; }
-        .range-x::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: #ef4444; border-radius: 50%; }
-        .range-y::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: #22c55e; border-radius: 50%; }
-        .range-z::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; background: #3b82f6; border-radius: 50%; }
+        /* BARRA LATERAL IZQUIERDA (CÁMARA/ENTORNO) */
+        #sidebar-left { width: 280px; background: #1e293b; padding: 20px; border-right: 1px solid #334155; display: flex; flex-direction: column; gap: 15px; z-index: 100; }
+        .control-group { background: #334155; padding: 12px; border-radius: 12px; }
+        label { display: block; font-size: 0.7rem; color: #38bdf8; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; }
+        input[type="range"] { width: 100%; cursor: pointer; accent-color: #38bdf8; }
 
-        /* BOTÓN 86 AZUL/CYAN */
-        .button-86 { all: unset; width: 220px; height: 40px; font-size: 14px; background: transparent; border: none; position: relative; color: #f0f0f0; cursor: pointer; z-index: 1; padding: 10px 20px; display: flex; align-items: center; justify-content: center; white-space: nowrap; user-select: none; align-self: center; margin-top: auto; margin-bottom: 20px; font-weight: bold; }
-        .button-86::after, .button-86::before { content: ''; position: absolute; bottom: 0; right: 0; z-index: -1; transition: all .4s; }
-        .button-86::before { transform: translate(0%, 0%); width: 100%; height: 100%; background: #0ea5e9; border-radius: 10px; }
-        .button-86::after { transform: translate(10px, 10px); width: 35px; height: 35px; background: #ffffff20; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-radius: 50px; }
-        .button-86:hover::before { transform: translate(5%, 20%); width: 110%; height: 110%; background: #38bdf8; }
-        .button-86:hover::after { border-radius: 10px; transform: translate(0, 0); width: 100%; height: 100%; }
+        /* VISOR CENTRAL */
+        #preview-zone { flex-grow: 1; position: relative; background: radial-gradient(circle, #233142 0%, #0f172a 100%); }
+        model-viewer { width: 100%; height: 100%; --poster-color: transparent; }
 
-        #preview-zone { flex-grow: 1; position: relative; background: #000; }
+        /* BASE HIRO EN EL VISOR */
+        #stage-ref { position: absolute; bottom: 15%; left: 50%; transform: translateX(-50%) rotateX(70deg); width: 250px; height: 250px; border: 15px solid black; background: white; display: flex; align-items: center; justify-content: center; pointer-events: none; opacity: 0.8; z-index: 1; }
+        #stage-ref img { width: 70%; transform: rotateX(-10deg); }
+
+        /* BARRA DE ESCALA DERECHA (VERTICAL) */
+        #sidebar-right { width: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #1e293b; border-left: 1px solid #334155; padding: 10px; z-index: 100; }
+        .vertical-slider { appearance: slider-vertical; width: 10px; height: 300px; cursor: pointer; accent-color: #ef4444; }
+
+        /* BOTONES ZOOM */
+        .zoom-controls { position: absolute; bottom: 120px; right: 100px; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
+        .btn-zoom { width: 50px; height: 50px; border-radius: 10px; border: none; background: #334155; color: white; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .btn-zoom:hover { background: #38bdf8; color: #0f172a; }
+
+        /* BOTÓN GENERAR QR (ESTILO 86 MEJORADO) */
+        .button-86 { all: unset; width: 220px; height: 40px; font-size: 14px; background: transparent; border: none; position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); color: #f0f0f0; cursor: pointer; z-index: 100; padding: 10px 20px; display: flex; align-items: center; justify-content: center; white-space: nowrap; font-weight: bold; }
+        .button-86::before { content: ''; position: absolute; bottom: 0; right: 0; z-index: -1; transition: all .4s; transform: translate(0%, 0%); width: 100%; height: 100%; background: #0ea5e9; border-radius: 10px; }
+        .button-86::after { content: ''; position: absolute; bottom: 0; right: 0; z-index: -1; transition: all .4s; transform: translate(10px, 10px); width: 35px; height: 35px; background: #ffffff20; backdrop-filter: blur(5px); border-radius: 50px; }
+        .button-86:hover::before { background: #38bdf8; width: 105%; height: 105%; }
+
+        /* PANTALLA PRESENTACIÓN */
         #presentation-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; color: black; z-index: 1000; flex-direction: row; align-items: center; justify-content: center; gap: 80px; }
-        
-        /* MARCADOR LIMPIO (Sin texto) */
-        .hiro-clean { background: black; width: 300px; height: 300px; display: flex; align-items: center; justify-content: center; }
-        .hiro-clean .white-sq { background: white; width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; }
-        .hiro-clean .black-sq { background: black; width: 75px; height: 75px; }
+        .hiro-img { border: 40px solid black; width: 300px; height: 300px; }
     </style>
 </head>
 <body>
 
-    <div id="sidebar">
+    <!-- BARRA IZQUIERDA -->
+    <div id="sidebar-left">
         <h2 style="color: #38bdf8; text-align: center; margin: 0; font-size: 0.9rem;">VISUALIZADOR AR</h2>
+        <div class="control-group">
+            <label>ÓRBITA CÁMARA (V)</label>
+            <input type="range" id="camV" min="0" max="180" value="75" oninput="actualizarCamara()">
+            <label>ÓRBITA CÁMARA (H)</label>
+            <input type="range" id="camH" min="-180" max="180" value="0" oninput="actualizarCamara()">
+        </div>
+        <p style="font-size: 10px; color: #94a3b8; text-align: center;">
+            🖱️ Izquierdo: Rotar | 🖱️ Derecho: Arrastrar | ⚙️ Rueda: Zoom
+        </p>
+    </div>
+
+    <!-- ZONA CENTRAL -->
+    <div id="preview-zone">
+        <div id="stage-ref"><img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg"></div>
+        <model-viewer 
+            id="visor" 
+            src="modelo1.glb" 
+            camera-controls 
+            enable-pan
+            environment-image="neutral" 
+            shadow-intensity="1" 
+            exposure="1.5"
+            camera-orbit="0deg 75deg 5m">
+        </model-viewer>
         
-        <div class="control-group">
-            <label>ESCALA: <span id="scale-val">1</span>X</label>
-            <input type="range" id="scale" min="0.1" max="10" step="0.1" value="1" oninput="actualizar()">
-        </div>
-
-        <div class="control-group">
-            <label>POSICIÓN (X, Y, Z)</label>
-            <label style="color:#ef4444; font-size:8px">EJE X</label>
-            <input type="range" id="posX" class="range-x" min="-4" max="4" step="0.1" value="0" oninput="actualizar()">
-            <label style="color:#22c55e; font-size:8px">EJE Y (ALTURA)</label>
-            <input type="range" id="posY" class="range-y" min="-2" max="4" step="0.1" value="0" oninput="actualizar()">
-            <label style="color:#3b82f6; font-size:8px">EJE Z</label>
-            <input type="range" id="posZ" class="range-z" min="-4" max="4" step="0.1" value="0" oninput="actualizar()">
-        </div>
-
-        <div class="control-group">
-            <label>ROTACIÓN (X, Y, Z)</label>
-            <label style="color:#ef4444; font-size:8px">ROTAR X</label>
-            <input type="range" id="rotX" class="range-x" min="-180" max="180" value="0" oninput="actualizar()">
-            <label style="color:#22c55e; font-size:8px">ROTAR Y</label>
-            <input type="range" id="rotY" class="range-y" min="-180" max="180" value="0" oninput="actualizar()">
-            <label style="color:#3b82f6; font-size:8px">ROTAR Z</label>
-            <input type="range" id="rotZ" class="range-z" min="-180" max="180" value="0" oninput="actualizar()">
-        </div>
-
         <button class="button-86" onclick="mostrarPresentacion()">GENERAR CÓDIGO QR</button>
     </div>
 
-    <div id="preview-zone">
-        <a-scene embedded vr-mode-ui="enabled: false" renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true;">
-            <a-assets><a-asset-item id="modelo" src="modelo1.glb"></a-asset-item></a-assets>
-            <a-sky color="#0f172a"></a-sky>
-            
-            <!-- LUCES DE ALTA FIDELIDAD (Igual que en la página que te gusta) -->
-            <a-entity light="type: ambient; intensity: 1.8;"></a-entity>
-            <a-entity light="type: directional; intensity: 2.2; position: 1 4 3;"></a-entity>
-            <a-entity light="type: point; intensity: 1.5; position: -2 3 -2;"></a-entity>
-            <a-entity light="type: hemisphere; color: #ffffff; groundColor: #000; intensity: 1.2;"></a-entity>
-
-            <!-- EJES Y GRILLA -->
-            <a-entity position="0 0 0">
-                <a-grid width="10" height="10" color="#444" opacity="0.3"></a-grid>
-                <a-entity line="start: -10 0.01 0; end: 10 0.01 0; color: #ef4444"></a-entity>
-                <a-entity line="start: 0 0.01 -10; end: 0 0.01 10; color: #3b82f6"></a-entity>
-                <a-entity line="start: 0 0.01 0; end: 0 10 0; color: #22c55e"></a-entity>
-            </a-entity>
-
-            <!-- BASE LIMPIA (Sin letras) -->
-            <a-plane rotation="-90 0 0" width="2" height="2" color="black" position="0 0.02 0"></a-plane>
-            <a-plane rotation="-90 0 0" width="1.2" height="1.2" color="white" position="0 0.03 0"></a-plane>
-            <a-plane rotation="-90 0 0" width="0.6" height="0.6" color="black" position="0 0.04 0"></a-plane>
-
-            <!-- EL ROBOT -->
-            <a-entity id="robot" gltf-model="#modelo" position="0 0 0" scale="1 1 1"></a-entity>
-            
-            <!-- CÁMARA ORBITAL -->
-            <a-entity id="camera" camera orbit-controls="target: 0 0.5 0; initialPosition: 0 2 5; minDistance: 1; maxDistance: 15;"></a-entity>
-        </a-scene>
+    <!-- BARRA DERECHA -->
+    <div id="sidebar-right">
+        <label style="writing-mode: vertical-rl; margin-bottom: 10px;">ESCALA</label>
+        <input type="range" id="scale" class="vertical-slider" min="0.1" max="10" step="0.1" value="1">
+        <span id="scale-val" style="margin-top:10px">1.0</span>
     </div>
 
+    <!-- BOTONES ZOOM -->
+    <div class="zoom-controls">
+        <button class="btn-zoom" onclick="zoom(0.8)">+</button>
+        <button class="btn-zoom" onclick="zoom(1.2)">-</button>
+    </div>
+
+    <!-- PANTALLA HIRO + QR -->
     <div id="presentation-view">
-        <button onclick="document.getElementById('presentation-view').style.display='none'" style="position:absolute; top:20px; left:20px; padding:10px; cursor:pointer; border-radius:20px; font-weight:bold;">VOLVER</button>
+        <button onclick="document.getElementById('presentation-view').style.display='none'" style="position:absolute; top:20px; left:20px; padding:10px; cursor:pointer; border-radius:20px;">Cerrar</button>
         <div style="text-align:center">
-            <h3>1. ESCANEA ESTE QR</h3>
+            <h3>1. ESCANEA EL QR</h3>
             <div id="qrcode"></div>
         </div>
         <div style="text-align:center">
             <h3>2. APUNTA AQUÍ</h3>
-            <div class="hiro-clean">
-                <div class="white-sq"><div class="black-sq"></div></div>
-            </div>
-            <p style="font-weight:bold; margin-top:20px;">MARCADOR DE ALTA PRECISIÓN</p>
+            <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="hiro-img">
         </div>
     </div>
 
     <script>
-        var qr = new QRCode(document.getElementById("qrcode"), { width: 350, height: 350 });
-        function actualizar() {
-            const robot = document.getElementById('robot');
-            if(!robot) return;
-            const s = document.getElementById('scale').value;
-            const px = document.getElementById('posX').value;
-            const py = document.getElementById('posY').value;
-            const pz = document.getElementById('posZ').value;
-            const rx = document.getElementById('rotX').value;
-            const ry = document.getElementById('rotY').value;
-            const rz = document.getElementById('rotZ').value;
-            
-            document.getElementById('scale-val').innerText = s;
-            
-            // ACTUALIZAR MODELO CON LOS SLIDERS
-            robot.setAttribute('scale', `${s} ${s} ${s}`);
-            robot.setAttribute('position', `${px} ${py} ${pz}`);
-            robot.setAttribute('rotation', `${rx} ${ry} ${rz}`);
+        var qr = new QRCode(document.getElementById("qrcode"), { width: 320, height: 320 });
+        const visor = document.getElementById('visor');
+
+        function actualizarCamara() {
+            const h = document.getElementById('camH').value;
+            const v = document.getElementById('camV').value;
+            visor.cameraOrbit = `${h}deg ${v}deg auto`;
+        }
+
+        function zoom(factor) {
+            visor.zoom(factor);
         }
 
         function mostrarPresentacion() {
-            const val = (id) => document.getElementById(id).value;
+            const s = document.getElementById('scale').value;
             let baseUrl = window.location.href.split('index.html')[0].split('?')[0];
             if (!baseUrl.endsWith('/')) baseUrl += '/';
-            // Pasamos todos los datos al celular
-            let finalUrl = `${baseUrl}ar.html?s=${val('scale')}&px=${val('posX')}&py=${val('posY')}&pz=${val('posZ')}&rx=${val('rotX')}&ry=${val('rotY')}&rz=${val('rotZ')}`;
+            // Pasamos la escala al celular (Sincronizada)
+            let finalUrl = `${baseUrl}ar.html?s=${s}`;
             qr.clear(); qr.makeCode(finalUrl);
             document.getElementById('presentation-view').style.display = 'flex';
         }
-        window.onload = () => { setTimeout(actualizar, 1000); };
+
+        document.getElementById('scale').oninput = function() {
+            document.getElementById('scale-val').innerText = this.value;
+        };
     </script>
 </body>
 </html>
