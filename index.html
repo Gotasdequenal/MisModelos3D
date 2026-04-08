@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Visualizador de modelo 3D con realidad aumentada</title>
+    <title>Visualizador de modelo 3D AR - Gotasdequenal</title>
     <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
     <script type="importmap">
     {
@@ -19,46 +19,52 @@
         #header-title { position: absolute; top: 0; width: 100%; text-align: center; padding: 15px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); z-index: 200; border-bottom: 1px solid #334155; }
         #header-title h1 { margin: 0; font-size: 1.1rem; color: #38bdf8; text-transform: uppercase; letter-spacing: 3px; }
 
-        /* CURSOR HUD INTELIGENTE */
+        /* CURSOR HUD */
         #custom-cursor { position: fixed; pointer-events: none; z-index: 9999; display: flex; flex-direction: column; align-items: center; opacity: 0; transition: opacity 0.2s ease; }
         #cursor-icon { width: 25px; height: 35px; border: 2px solid white; border-radius: 12px; position: relative; background: rgba(0,0,0,0.8); }
         .cursor-btn { position: absolute; top: 0; width: 50%; height: 40%; border-radius: 8px 8px 0 0; }
-        .btn-left { left: 0; background: #f59aff; } /* ROSA PARA ROTAR */
-        .btn-right { right: 0; background: #38bdf8; } /* AZUL PARA MOVER */
+        .btn-left { left: 0; background: #f59aff; }
+        .btn-right { right: 0; background: #38bdf8; }
         .cursor-labels { margin-top: 5px; display: flex; gap: 10px; font-size: 10px; font-weight: bold; }
-        .lbl-rotar { color: #f59aff; }
-        .lbl-mover { color: #38bdf8; }
 
-        /* SIDEBAR IZQUIERDA: BOTONES Y ETIQUETAS DIAGONALES */
-        #sidebar-left { width: 150px; background: #1e293b; border-right: 1px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 100px; z-index: 100; }
-        .btn-wrapper { position: relative; display: flex; flex-direction: column; align-items: center; }
+        /* SIDEBAR IZQUIERDA: BOTONES PUSHABLE 3D */
+        #sidebar-left { width: 150px; background: #1e293b; border-right: 1px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px; z-index: 100; }
         
-        .stacked-btn { transform: rotate(-25deg) skew(25deg); transform-style: preserve-3d; position: relative; width: 80px; height: 32px; border: none; background: transparent; cursor: pointer; }
-        .stacked-btn span { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #2a2a2a; color: #fff; font-size: 18px; transition: 0.5s ease-out; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .stacked-btn:hover span:nth-child(5) { opacity: 1; }
+        .pushable { position: relative; border: none; background: transparent; padding: 0; cursor: pointer; outline-offset: 4px; transition: filter 250ms; user-select: none; }
+        .shadow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px; background: hsl(0deg 0% 0% / 0.25); transform: translateY(2px); transition: transform 600ms cubic-bezier(.3, .7, .4, 1); }
+        .edge { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px; }
+        .front { display: block; position: relative; padding: 12px 20px; border-radius: 12px; font-size: 1rem; color: white; will-change: transform; transform: translateY(-4px); transition: transform 600ms cubic-bezier(.3, .7, .4, 1); font-weight: bold; }
         
-        #btnUp:hover span:nth-child(5) { transform: translate(25px, -25px); background: #52E19F; }
-        #btnUp:hover span:nth-child(4) { transform: translate(20px, -20px); opacity: .8; }
-        #btnUp:hover span:nth-child(3) { transform: translate(15px, -15px); opacity: .6; }
-        #btnDown:hover span:nth-child(5) { transform: translate(-25px, 25px); background: #ef4444; }
-        #btnDown:hover span:nth-child(4) { transform: translate(-20px, 20px); opacity: .8; }
-        #btnDown:hover span:nth-child(3) { transform: translate(-15px, 15px); opacity: .6; }
+        /* Colores Verdes (Subir) */
+        .edge-up { background: linear-gradient(to left, hsl(145deg 100% 16%) 0%, hsl(145deg 100% 32%) 8%, hsl(145deg 100% 32%) 92%, hsl(145deg 100% 16%) 100%); }
+        .front-up { background: hsl(145deg 100% 40%); }
+        /* Colores Rojos (Bajar) */
+        .edge-down { background: linear-gradient(to left, hsl(345deg 100% 16%) 0%, hsl(345deg 100% 32%) 8%, hsl(345deg 100% 32%) 92%, hsl(345deg 100% 16%) 100%); }
+        .front-down { background: hsl(345deg 100% 47%); }
 
-        .diagonal-label { font-size: 11px; font-weight: bold; transform: rotate(-25deg); position: absolute; white-space: nowrap; text-transform: uppercase; letter-spacing: 1px; }
-        .label-subir { color: #52E19F; bottom: -35px; left: 20px; }
-        .label-bajar { color: #ef4444; top: -35px; right: 20px; }
+        .pushable:hover .front { transform: translateY(-6px); }
+        .pushable:active .front { transform: translateY(-2px); }
+        .pushable:hover .shadow { transform: translateY(4px); }
+        .pushable:active .shadow { transform: translateY(1px); }
 
         /* SIDEBAR DERECHA */
         #sidebar-right { width: 100px; background: #1e293b; border-left: 1px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
         .vertical-slider { appearance: slider-vertical; width: 8px; height: 300px; background: #475569; outline: none; }
 
-        /* BOTÓN QR ANIMADO */
-        .Btn-Container { display: flex; width: 210px; height: 50px; background-color: #1d2129; border-radius: 40px; box-shadow: 0px 5px 15px rgba(0,0,0,0.5); justify-content: space-between; align-items: center; border: none; cursor: pointer; position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; transition: all 0.3s; }
-        .icon-Container { width: 42px; height: 42px; background-color: #38bdf8; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 3px solid #1d2129; margin-left: 4px; transition: all 0.3s; }
-        .text { width: calc(210px - 50px); color: white; font-weight: bold; font-size: 0.8em; letter-spacing: 1px; }
-        .Btn-Container:hover .icon-Container { transform: scale(1.1); background-color: #38bdf8; }
-        .Btn-Container:hover .icon-Container svg { animation: arrow 1s linear infinite; }
-        @keyframes arrow { 0% { opacity: 0; transform: translateX(-5px); } 100% { opacity: 1; transform: translateX(5px); } }
+        /* BOTÓN QR: SPARKLE ANIMATED */
+        .button-qr {
+            --black-700: hsla(0 0% 12% / 1); --border_radius: 9999px; --transtion: 0.3s ease-in-out;
+            cursor: pointer; position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 0.5rem; padding: 0.8rem 2rem; background-color: transparent;
+            border: none; border-radius: var(--border_radius); z-index: 1000; transition: transform var(--transtion);
+        }
+        .button-qr::before { content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; background-color: var(--black-700); border-radius: var(--border_radius); box-shadow: inset 0 0.5px hsl(0, 0%, 100%), inset 0 -1px 2px 0 hsl(0, 0%, 0%), 0px 4px 10px -4px hsla(0 0% 0% / 0.5); transition: all var(--transtion); z-index: 0; }
+        .button-qr::after { content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; background-color: hsla(200 97% 61% / 0.75); background-image: radial-gradient(at 51% 89%, hsla(190, 45%, 74%, 1) 0px, transparent 50%); opacity: var(--active, 0); border-radius: var(--border_radius); transition: opacity var(--transtion); z-index: 2; }
+        .button-qr:is(:hover, :focus-visible) { --active: 1; transform: translateX(-50%) scale(1.1); }
+        .button-qr .dots_border { overflow: hidden; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: calc(100% + 2px); height: calc(100% + 2px); border-radius: var(--border_radius); z-index: -10; }
+        .button-qr .dots_border::before { content: ""; position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); transform-origin: left; width: 100%; height: 2rem; background-color: white; mask: linear-gradient(transparent 0%, white 120%); animation: rotate 2s linear infinite; }
+        @keyframes rotate { to { transform: rotate(360deg); } }
+        .button-qr .text_button { position: relative; z-index: 10; font-size: 0.9rem; font-weight: bold; color: white; letter-spacing: 1px; }
 
         #container3d { flex-grow: 1; position: relative; }
         #presentation-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; color: black; z-index: 2000; flex-direction: row; align-items: center; justify-content: center; gap: 80px; }
@@ -67,26 +73,22 @@
 <body>
 
     <div id="custom-cursor">
-        <div id="cursor-icon">
-            <div class="cursor-btn btn-left"></div>
-            <div class="cursor-btn btn-right"></div>
-        </div>
-        <div class="cursor-labels">
-            <span class="lbl-rotar">ROTAR</span>
-            <span class="lbl-mover">MOVER</span>
-        </div>
+        <div id="cursor-icon"><div class="cursor-btn btn-left"></div><div class="cursor-btn btn-right"></div></div>
+        <div class="cursor-labels"><span style="color:#f59aff">ROTAR</span><span style="color:#38bdf8">MOVER</span></div>
     </div>
 
     <div id="header-title"><h1>Visualizador de modelo 3D con realidad aumentada</h1></div>
 
     <div id="sidebar-left">
         <div class="btn-wrapper">
-            <button class="stacked-btn" id="btnUp"><span>▲</span><span>▲</span><span>▲</span><span>▲</span><span>▲</span></button>
-            <span class="diagonal-label label-subir">SUBIR</span>
+            <button class="pushable" id="btnUp">
+                <span class="shadow"></span><span class="edge edge-up"></span><span class="front front-up">SUBIR</span>
+            </button>
         </div>
         <div class="btn-wrapper">
-            <span class="diagonal-label label-bajar">BAJAR</span>
-            <button class="stacked-btn" id="btnDown"><span>▼</span><span>▼</span><span>▼</span><span>▼</span><span>▼</span></button>
+            <button class="pushable" id="btnDown">
+                <span class="shadow"></span><span class="edge edge-down"></span><span class="front front-down">BAJAR</span>
+            </button>
         </div>
     </div>
 
@@ -98,11 +100,9 @@
         <div id="scale-val" style="margin-top:10px; font-weight:bold; color:#38bdf8;">1.0x</div>
     </div>
 
-    <button class="Btn-Container" id="generateBtn">
-        <span class="text">GENERAR CÓDIGO QR</span>
-        <span class="icon-Container">
-          <svg width="18" height="18" viewBox="0 0 16 18" fill="none"><path d="M8 1L15 9L8 17M15 9H1" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </span>
+    <button class="button-qr" id="generateBtn">
+        <div class="dots_border"></div>
+        <span class="text_button">GENERAR CÓDIGO QR</span>
     </button>
 
     <div id="presentation-view">
@@ -121,8 +121,6 @@
         const mouse = new THREE.Vector2();
         let isDragging = false, isRotating = false;
 
-        const cursorHUD = document.getElementById('custom-cursor');
-
         init();
 
         function init() {
@@ -135,22 +133,20 @@
             renderer.setSize(window.innerWidth - 250, window.innerHeight);
             renderer.outputColorSpace = THREE.SRGBColorSpace;
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.3;
+            renderer.toneMappingExposure = 1.4;
             document.getElementById('container3d').appendChild(renderer.domElement);
 
-            scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+            scene.add(new THREE.AmbientLight(0xffffff, 1.8));
             const sun = new THREE.DirectionalLight(0xffffff, 2.5);
             sun.position.set(5, 15, 10);
             scene.add(sun);
 
             scene.add(new THREE.GridHelper(15, 30, 0x444444, 0x222222));
-            const axes = new THREE.AxesHelper(6);
-            scene.add(axes);
+            scene.add(new THREE.AxesHelper(6));
 
             new THREE.TextureLoader().load('https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg', (t) => {
                 const marker = new THREE.Mesh(new THREE.PlaneGeometry(3, 3), new THREE.MeshBasicMaterial({ map: t }));
                 marker.rotation.x = -Math.PI / 2;
-                marker.position.y = 0.01;
                 scene.add(marker);
             });
 
@@ -161,12 +157,13 @@
 
             window.addEventListener('mousemove', onMouseMove);
             window.addEventListener('mousedown', onMouseDown);
-            window.addEventListener('mouseup', onMouseUp);
+            window.addEventListener('mouseup', () => { controls.enabled = true; isDragging = isRotating = false; });
             window.addEventListener('resize', onWindowResize);
             animate();
         }
 
         function onMouseMove(e) {
+            const cursorHUD = document.getElementById('custom-cursor');
             cursorHUD.style.left = (e.clientX + 15) + 'px';
             cursorHUD.style.top = (e.clientY + 15) + 'px';
 
@@ -185,8 +182,7 @@
                 }
 
                 if(isDragging) {
-                    const planeNormal = new THREE.Vector3(0, 1, 0);
-                    const plane = new THREE.Plane(planeNormal, -robot.position.y);
+                    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -robot.position.y);
                     const point = new THREE.Vector3();
                     raycaster.ray.intersectPlane(plane, point);
                     robot.position.x = point.x;
@@ -208,8 +204,6 @@
             }
         }
 
-        function onMouseUp() { controls.enabled = true; isDragging = isRotating = false; }
-
         function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
         function onWindowResize() {
             camera.aspect = (window.innerWidth - 250) / window.innerHeight;
@@ -226,14 +220,17 @@
         };
 
         document.getElementById('generateBtn').onclick = () => {
-            const s = document.getElementById('scaleInput').value;
-            const p = robot.position, r = robot.rotation;
-            let baseUrl = window.location.href.split('index.html')[0].split('?')[0];
-            if (!baseUrl.endsWith('/')) baseUrl += '/';
-            let finalUrl = `${baseUrl}ar.html?s=${s}&px=${p.x.toFixed(2)}&py=${p.y.toFixed(2)}&pz=${p.z.toFixed(2)}&rx=${THREE.MathUtils.radToDeg(r.x).toFixed(0)}&ry=${THREE.MathUtils.radToDeg(r.y).toFixed(0)}&rz=${THREE.MathUtils.radToDeg(r.z).toFixed(0)}`;
-            document.getElementById('qrcode').innerHTML = "";
-            new QRCode(document.getElementById("qrcode"), { text: finalUrl, width: 300, height: 300 });
-            document.getElementById('presentation-view').style.display = 'flex';
+            // Pequeño retraso para que se vea la animación del botón antes de cambiar
+            setTimeout(() => {
+                const s = document.getElementById('scaleInput').value;
+                const p = robot.position, r = robot.rotation;
+                let baseUrl = window.location.href.split('index.html')[0].split('?')[0];
+                if (!baseUrl.endsWith('/')) baseUrl += '/';
+                let finalUrl = `${baseUrl}ar.html?s=${s}&px=${p.x.toFixed(2)}&py=${p.y.toFixed(2)}&pz=${p.z.toFixed(2)}&rx=${THREE.MathUtils.radToDeg(r.x).toFixed(0)}&ry=${THREE.MathUtils.radToDeg(r.y).toFixed(0)}&rz=${THREE.MathUtils.radToDeg(r.z).toFixed(0)}`;
+                document.getElementById('qrcode').innerHTML = "";
+                new QRCode(document.getElementById("qrcode"), { text: finalUrl, width: 300, height: 300 });
+                document.getElementById('presentation-view').style.display = 'flex';
+            }, 300);
         };
         document.getElementById('closeBtn').onclick = () => document.getElementById('presentation-view').style.display = 'none';
     </script>
