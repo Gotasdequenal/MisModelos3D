@@ -15,10 +15,10 @@
         
         <a-assets><a-asset-item id="modelo" src="modelo1.glb"></a-asset-item></a-assets>
         
-        <!-- Luces Súper Potentes -->
+        <!-- Luces Súper Potentes para revelar detalles -->
         <a-entity light="type: ambient; intensity: 2.5;"></a-entity>
         <a-entity light="type: directional; intensity: 2; position: 1 4 3;"></a-entity>
-        <a-entity light="type: hemisphere; intensity: 1.5; color: #fff; groundColor: #333;"></a-entity>
+        <a-entity light="type: hemisphere; intensity: 1; color: #fff;"></a-entity>
         
         <a-marker preset="hiro" smooth="true" smoothCount="5">
             <a-entity id="entidad" gltf-model="#modelo"></a-entity>
@@ -29,7 +29,9 @@
 
     <script>
         const p = new URLSearchParams(window.location.search);
-        const s = p.get('s') || "1";
+        
+        // Multiplicamos la escala por 8 para que el mBot salga grande y detallado en el celular
+        const s = parseFloat(p.get('s') || "1") * 8; 
         const px = p.get('px') || "0";
         const py = p.get('py') || "0";
         const pz = p.get('pz') || "0";
