@@ -1,111 +1,120 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Editor AR Master - Gotasdequenal</title>
+    <title>Editor AR Pro - Gotasdequenal</title>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; height: 100vh; overflow: hidden; }
-        #sidebar { width: 320px; background: #1e293b; padding: 20px; border-right: 2px solid #334155; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
-        .control-group { background: #334155; padding: 10px; border-radius: 12px; border: 1px solid #475569; }
-        label { display: block; font-size: 0.7rem; color: #38bdf8; margin-bottom: 5px; font-weight: bold; }
-        input[type="range"] { width: 100%; cursor: pointer; accent-color: #38bdf8; }
+        #sidebar { width: 320px; background: #1e293b; padding: 20px; border-right: 2px solid #334155; display: flex; flex-direction: column; gap: 10px; z-index: 100; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
+        .control-group { background: #334155; padding: 12px; border-radius: 12px; border: 1px solid #475569; }
+        label { display: block; font-size: 0.7rem; color: #38bdf8; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
         
-        .btn-orbe {
-            width: 80px; height: 80px; border-radius: 50%; border: none; cursor: move;
-            background: radial-gradient(circle at 30% 30%, #00f2fe, #0077be);
-            box-shadow: 0 8px 15px rgba(0,0,0,0.4), inset 0 -5px 10px rgba(0,0,0,0.5);
-            color: white; font-weight: bold; align-self: center; margin-top: auto;
-        }
+        /* GIZMO UI (Flechas de movimiento) */
+        .gizmo-ui { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; text-align: center; margin-top: 10px; }
+        .btn-gizmo { background: #475569; border: none; color: white; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .btn-gizmo:hover { background: #38bdf8; color: #0f172a; }
+        .btn-x { border-bottom: 3px solid #ef4444; } /* Rojo - X */
+        .btn-y { border-bottom: 3px solid #22c55e; } /* Verde - Y */
+        .btn-z { border-bottom: 3px solid #3b82f6; } /* Azul - Z */
 
-        #preview-zone { flex-grow: 1; position: relative; background: #0f172a; cursor: grab; }
-        #preview-zone:active { cursor: grabbing; }
-        model-viewer { width: 100%; height: 100%; --poster-color: transparent; }
-
-        #stage-floor {
-            position: absolute; width: 400px; height: 400px; background: white; border: 25px solid black;
-            display: flex; align-items: center; justify-content: center;
-            transform: rotateX(80deg); bottom: 10%; left: 50%; margin-left: -200px; z-index: 1; pointer-events: none;
-        }
-        #stage-floor span { color: black; font-size: 5rem; font-weight: bold; font-family: Arial; }
-
-        #presentation-view {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; color: black; z-index: 1000; flex-direction: column; align-items: center; justify-content: center;
-        }
+        input[type="range"] { width: 100%; cursor: pointer; accent-color: #38bdf8; }
+        .btn-ar { width: 80px; height: 80px; border-radius: 50%; border: none; cursor: pointer; background: radial-gradient(circle at 30% 30%, #00f2fe, #0077be); color: white; font-weight: bold; align-self: center; margin-top: auto; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
+        
+        #preview-zone { flex-grow: 1; position: relative; background: #000; }
+        #presentation-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; color: black; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
     <div id="sidebar">
-        <h3 style="color: #38bdf8; text-align: center; margin: 0;">EDITOR 3D</h3>
+        <h3 style="color: #38bdf8; text-align: center; margin: 0;">GIZMO EDITOR 3D</h3>
         
         <div class="control-group">
             <label>ESCALA: <span id="scale-val">1.0</span>x</label>
-            <input type="range" id="scale" min="0.1" max="15" step="0.1" value="1" oninput="actualizar()">
+            <input type="range" id="scale" min="0.1" max="10" step="0.1" value="1" oninput="actualizar()">
         </div>
+
         <div class="control-group">
-            <label>POSICIÓN (Arrastra con el Mouse)</label>
-            <label>ALTURA (Y): <span id="posY-val">0</span></label>
-            <input type="range" id="posY" min="-1" max="5" step="0.1" value="0" oninput="actualizar()">
+            <label>MOVIMIENTO (GIZMO)</label>
+            <div class="gizmo-ui">
+                <button class="btn-gizmo btn-x" onclick="mover('x', 0.1)">X+</button>
+                <button class="btn-gizmo btn-y" onclick="mover('y', 0.1)">Y+</button>
+                <button class="btn-gizmo btn-z" onclick="mover('z', 0.1)">Z+</button>
+                <button class="btn-gizmo btn-x" onclick="mover('x', -0.1)">X-</button>
+                <button class="btn-gizmo btn-y" onclick="mover('y', -0.1)">Y-</button>
+                <button class="btn-gizmo btn-z" onclick="mover('z', -0.1)">Z-</button>
+            </div>
+            <p style="font-size: 10px; color: #94a3b8; margin-top: 5px;">X: Lat | Y: Alt | Z: Prof</p>
         </div>
+
         <div class="control-group">
             <label>ROTACIÓN (X, Y, Z)</label>
             <input type="range" id="rotX" min="-180" max="180" value="0" oninput="actualizar()">
             <input type="range" id="rotY" min="-180" max="180" value="0" oninput="actualizar()">
             <input type="range" id="rotZ" min="-180" max="180" value="0" oninput="actualizar()">
         </div>
-        <button class="btn-orbe" onclick="mostrarPresentacion()">AR</button>
+
+        <button class="btn-ar" onclick="mostrarPresentacion()">AR</button>
     </div>
 
-    <div id="preview-zone" onmousedown="startDrag(event)" onmousemove="doDrag(event)" onmouseup="endDrag()" onmouseleave="endDrag()">
-        <div id="stage-floor"><span>Hiro</span></div>
-        <model-viewer id="visor" src="modelo1.glb" interaction-prompt="none"></model-viewer>
+    <div id="preview-zone">
+        <!-- Escena 3D de previsualización sin cámara activa -->
+        <a-scene embedded vr-mode-ui="enabled: false">
+            <a-assets><a-asset-item id="modelo" src="modelo1.glb"></a-asset-item></a-assets>
+            
+            <a-sky color="#0f172a"></a-sky>
+            <a-entity light="type: ambient; intensity: 1.2;"></a-entity>
+            <a-entity light="type: directional; intensity: 0.8; position: 1 2 1"></a-entity>
+
+            <!-- Marcador Hiro como Suelo Real -->
+            <a-plane position="0 0 0" rotation="-90 0 0" width="3" height="3" src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg"></a-plane>
+            <a-grid position="0 -0.01 0" rotation="-90 0 0" width="10" height="10" color="#334155"></a-grid>
+
+            <!-- El Robot -->
+            <a-entity id="robot" gltf-model="#modelo" position="0 0 0"></a-entity>
+
+            <!-- Cámara de edición fija -->
+            <a-entity position="0 2 4" rotation="-25 0 0"></a-entity>
+        </a-scene>
     </div>
 
     <div id="presentation-view">
-        <button onclick="document.getElementById('presentation-view').style.display='none'" style="position:absolute; top:20px; left:20px;">VOLVER</button>
-        <div style="border: 45px solid black; padding: 20px; background: white;"><img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" width="220"></div>
+        <button onclick="document.getElementById('presentation-view').style.display='none'" style="position:absolute; top:20px; left:20px;">Cerrar</button>
+        <div style="border: 50px solid black; padding: 20px;"><img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" width="250"></div>
         <div id="qrcode" style="margin-top:20px;"></div>
     </div>
 
     <script>
         var qr = new QRCode(document.getElementById("qrcode"), { width: 250, height: 250 });
-        const visor = document.getElementById('visor');
-        let dragging = false;
-        let px = 0, pz = 0;
-
-        function startDrag(e) { if(e.target.id === "preview-zone") dragging = true; }
-        function endDrag() { dragging = false; }
-        function doDrag(e) {
-            if(!dragging) return;
-            px += e.movementX * 0.01;
-            pz += e.movementY * 0.01;
-            actualizar();
-        }
+        let pos = { x: 0, y: 0, z: 0 };
 
         function actualizar() {
             const s = document.getElementById('scale').value;
-            const py = document.getElementById('posY').value;
             const rx = document.getElementById('rotX').value;
             const ry = document.getElementById('rotY').value;
             const rz = document.getElementById('rotZ').value;
             
             document.getElementById('scale-val').innerText = s;
-            document.getElementById('posY-val').innerText = py;
 
-            // Visual en PC
-            visor.style.transform = `scale(${s}) translate(${px*50}px, ${pz*50}px)`;
-            visor.orientation = `${rx}deg ${ry}deg ${rz}deg`;
+            const robot = document.getElementById('robot');
+            robot.setAttribute('scale', `${s} ${s} ${s}`);
+            robot.setAttribute('rotation', `${rx} ${ry} ${rz}`);
+            robot.setAttribute('position', `${pos.x} ${pos.y} ${pos.z}`);
+        }
+
+        function mover(eje, valor) {
+            pos[eje] = Math.round((pos[eje] + valor) * 10) / 10;
+            actualizar();
         }
 
         function mostrarPresentacion() {
             const val = (id) => document.getElementById(id).value;
             let baseUrl = window.location.href.split('index.html')[0].split('?')[0];
             if (!baseUrl.endsWith('/')) baseUrl += '/';
-            // Enviamos posición real calculada del mouse
-            let finalUrl = `${baseUrl}ar.html?s=${val('scale')}&rx=${val('rotX')}&ry=${val('rotY')}&rz=${val('rotZ')}&px=${px.toFixed(2)}&py=${py}&pz=${pz.toFixed(2)}`;
+            
+            let finalUrl = `${baseUrl}ar.html?s=${val('scale')}&rx=${val('rotX')}&ry=${val('rotY')}&rz=${val('rotZ')}&px=${pos.x}&py=${pos.y}&pz=${pos.z}`;
             qr.clear();
             qr.makeCode(finalUrl);
             document.getElementById('presentation-view').style.display = 'flex';
