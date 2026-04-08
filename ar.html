@@ -6,15 +6,22 @@
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
-        #arjs-video { width: 100vw !important; height: 100vh !important; object-fit: cover !important; position: fixed !important; top: 0; left: 0; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+        #arjs-video { 
+            width: 100vw !important; height: 100vh !important; 
+            object-fit: cover !important; position: fixed !important; top: 0; left: 0;
+            z-index: -1;
+        }
+        .a-canvas { z-index: 1; }
     </style>
 </head>
-<body>
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
+<body style="margin: 0; background: transparent;">
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false" renderer="alpha: true; antialias: true;">
         <a-assets><a-asset-item id="modelo" src="modelo1.glb"></a-asset-item></a-assets>
-        <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
         
+        <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
+        <a-entity light="type: directional; intensity: 1; position: 1 2 1"></a-entity>
+
         <a-marker preset="hiro">
             <a-entity id="entidad" gltf-model="#modelo"></a-entity>
         </a-marker>
@@ -23,7 +30,8 @@
 
     <script>
         const p = new URLSearchParams(window.location.search);
-        const s = p.get('s') || "1";
+        // Ajustamos escala: en el móvil AR.js es 10 veces más pequeño que en model-viewer
+        const s = parseFloat(p.get('s') || "1") * 0.5; 
         const rx = p.get('rx') || "0";
         const ry = p.get('ry') || "0";
         const rz = p.get('rz') || "0";
