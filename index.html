@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Visualizador de modelo 3D AR - Gotasdequenal</title>
+    <title>Visualizador 3D AR - Gotasdequenal</title>
     <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
     <script type="importmap">
     {
@@ -14,57 +14,57 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0b0f1a; color: white; display: flex; height: 100vh; overflow: hidden; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #050811; color: white; display: flex; height: 100vh; overflow: hidden; }
         
-        #header-title { position: absolute; top: 0; width: 100%; text-align: center; padding: 15px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); z-index: 200; border-bottom: 1px solid #334155; }
-        #header-title h1 { margin: 0; font-size: 1.1rem; color: #38bdf8; text-transform: uppercase; letter-spacing: 3px; }
+        #header-title { position: absolute; top: 0; width: 100%; text-align: center; padding: 20px; background: rgba(5, 8, 17, 0.7); backdrop-filter: blur(15px); z-index: 200; border-bottom: 1px solid rgba(56, 189, 248, 0.2); }
+        #header-title h1 { margin: 0; font-size: 1rem; color: #00d1ff; text-transform: uppercase; letter-spacing: 4px; text-shadow: 0 0 15px rgba(0, 209, 255, 0.5); }
 
-        /* CURSOR HUD */
-        #custom-cursor { position: fixed; pointer-events: none; z-index: 9999; display: flex; flex-direction: column; align-items: center; opacity: 0; transition: opacity 0.2s ease; }
-        #cursor-icon { width: 25px; height: 35px; border: 2px solid white; border-radius: 12px; position: relative; background: rgba(0,0,0,0.8); }
-        .cursor-btn { position: absolute; top: 0; width: 50%; height: 40%; border-radius: 8px 8px 0 0; }
-        .btn-left { left: 0; background: #f59aff; }
-        .btn-right { right: 0; background: #38bdf8; }
-        .cursor-labels { margin-top: 5px; display: flex; gap: 10px; font-size: 10px; font-weight: bold; }
-
-        /* SIDEBAR IZQUIERDA: BOTONES PUSHABLE 3D */
-        #sidebar-left { width: 150px; background: #1e293b; border-right: 1px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px; z-index: 100; }
+        /* SIDEBAR IZQUIERDA */
+        #sidebar-left { width: 150px; background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(10px); border-right: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 100px; z-index: 100; }
         
-        .pushable { position: relative; border: none; background: transparent; padding: 0; cursor: pointer; outline-offset: 4px; transition: filter 250ms; user-select: none; }
-        .shadow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px; background: hsl(0deg 0% 0% / 0.25); transform: translateY(2px); transition: transform 600ms cubic-bezier(.3, .7, .4, 1); }
+        .pushable { position: relative; border: none; background: transparent; padding: 0; cursor: pointer; user-select: none; }
+        .shadow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px; background: rgba(0,0,0,0.5); transform: translateY(2px); transition: transform 600ms cubic-bezier(.3, .7, .4, 1); }
         .edge { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px; }
-        .front { display: block; position: relative; padding: 12px 20px; border-radius: 12px; font-size: 1rem; color: white; will-change: transform; transform: translateY(-4px); transition: transform 600ms cubic-bezier(.3, .7, .4, 1); font-weight: bold; }
+        .front { display: block; position: relative; padding: 12px 20px; border-radius: 12px; font-size: 0.9rem; color: white; will-change: transform; transform: translateY(-4px); transition: transform 600ms cubic-bezier(.3, .7, .4, 1); font-weight: bold; letter-spacing: 1px; }
         
-        /* Colores Verdes (Subir) */
-        .edge-up { background: linear-gradient(to left, hsl(145deg 100% 16%) 0%, hsl(145deg 100% 32%) 8%, hsl(145deg 100% 32%) 92%, hsl(145deg 100% 16%) 100%); }
-        .front-up { background: hsl(145deg 100% 40%); }
-        /* Colores Rojos (Bajar) */
-        .edge-down { background: linear-gradient(to left, hsl(345deg 100% 16%) 0%, hsl(345deg 100% 32%) 8%, hsl(345deg 100% 32%) 92%, hsl(345deg 100% 16%) 100%); }
-        .front-down { background: hsl(345deg 100% 47%); }
+        /* Colores Estéticos: Cian y Violeta */
+        .edge-up { background: linear-gradient(to left, #004e64 0%, #00a5cf 100%); }
+        .front-up { background: #00d1ff; }
+        .edge-down { background: linear-gradient(to left, #4a0072 0%, #7b1fa2 100%); }
+        .front-down { background: #9d50bb; }
 
-        .pushable:hover .front { transform: translateY(-6px); }
+        .pushable:hover .front { transform: translateY(-6px); filter: brightness(1.1); }
         .pushable:active .front { transform: translateY(-2px); }
-        .pushable:hover .shadow { transform: translateY(4px); }
-        .pushable:active .shadow { transform: translateY(1px); }
+
+        .diagonal-label { font-size: 10px; font-weight: bold; transform: rotate(-25deg); position: absolute; text-transform: uppercase; letter-spacing: 2px; }
+        .label-subir { color: #00d1ff; bottom: -30px; left: 20px; }
+        .label-bajar { color: #9d50bb; top: -30px; right: 20px; }
 
         /* SIDEBAR DERECHA */
-        #sidebar-right { width: 100px; background: #1e293b; border-left: 1px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
-        .vertical-slider { appearance: slider-vertical; width: 8px; height: 300px; background: #475569; outline: none; }
+        #sidebar-right { width: 100px; background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(10px); border-left: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+        .vertical-slider { appearance: slider-vertical; width: 6px; height: 300px; background: #334155; outline: none; border-radius: 10px; }
 
-        /* BOTÓN QR: SPARKLE ANIMATED */
+        /* BOTÓN QR: ANIMACIÓN CONTINUA CORREGIDA */
         .button-qr {
-            --black-700: hsla(0 0% 12% / 1); --border_radius: 9999px; --transtion: 0.3s ease-in-out;
-            cursor: pointer; position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            display: flex; align-items: center; gap: 0.5rem; padding: 0.8rem 2rem; background-color: transparent;
-            border: none; border-radius: var(--border_radius); z-index: 1000; transition: transform var(--transtion);
+            --active: 0; cursor: pointer; position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            padding: 14px 30px; background: rgba(20, 20, 25, 0.8); backdrop-filter: blur(10px);
+            border: none; border-radius: 999px; z-index: 1000; transition: transform 0.3s;
+            display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,0.1);
         }
-        .button-qr::before { content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; background-color: var(--black-700); border-radius: var(--border_radius); box-shadow: inset 0 0.5px hsl(0, 0%, 100%), inset 0 -1px 2px 0 hsl(0, 0%, 0%), 0px 4px 10px -4px hsla(0 0% 0% / 0.5); transition: all var(--transtion); z-index: 0; }
-        .button-qr::after { content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; background-color: hsla(200 97% 61% / 0.75); background-image: radial-gradient(at 51% 89%, hsla(190, 45%, 74%, 1) 0px, transparent 50%); opacity: var(--active, 0); border-radius: var(--border_radius); transition: opacity var(--transtion); z-index: 2; }
-        .button-qr:is(:hover, :focus-visible) { --active: 1; transform: translateX(-50%) scale(1.1); }
-        .button-qr .dots_border { overflow: hidden; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: calc(100% + 2px); height: calc(100% + 2px); border-radius: var(--border_radius); z-index: -10; }
-        .button-qr .dots_border::before { content: ""; position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); transform-origin: left; width: 100%; height: 2rem; background-color: white; mask: linear-gradient(transparent 0%, white 120%); animation: rotate 2s linear infinite; }
-        @keyframes rotate { to { transform: rotate(360deg); } }
-        .button-qr .text_button { position: relative; z-index: 10; font-size: 0.9rem; font-weight: bold; color: white; letter-spacing: 1px; }
+        .button-qr:hover { transform: translateX(-50%) scale(1.05); border-color: #00d1ff; }
+        
+        /* Borde animado infinito */
+        .glow-border {
+            position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
+            border-radius: 999px; padding: 2px;
+            background: conic-gradient(from 0deg, transparent, #00d1ff, transparent, #9d50bb, transparent);
+            animation: rotateGlow 3s linear infinite;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude; pointer-events: none;
+        }
+        @keyframes rotateGlow { to { transform: rotate(360deg); } }
+
+        .text_button { font-size: 0.8rem; font-weight: bold; color: white; letter-spacing: 2px; z-index: 10; }
 
         #container3d { flex-grow: 1; position: relative; }
         #presentation-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; color: black; z-index: 2000; flex-direction: row; align-items: center; justify-content: center; gap: 80px; }
@@ -72,41 +72,44 @@
 </head>
 <body>
 
-    <div id="custom-cursor">
-        <div id="cursor-icon"><div class="cursor-btn btn-left"></div><div class="cursor-btn btn-right"></div></div>
-        <div class="cursor-labels"><span style="color:#f59aff">ROTAR</span><span style="color:#38bdf8">MOVER</span></div>
+    <div id="custom-cursor" style="position:fixed; pointer-events:none; z-index:9999; opacity:0;">
+        <div id="cursor-icon" style="width:25px; height:35px; border:2px solid white; border-radius:12px; background:rgba(0,0,0,0.8); position:relative;">
+            <div id="c-left" style="position:absolute; top:0; left:0; width:50%; height:40%; background:#f59aff; border-radius:8px 0 0 0; opacity:0;"></div>
+            <div id="c-right" style="position:absolute; top:0; right:0; width:50%; height:40%; background:#00d1ff; border-radius:0 8px 0 0; opacity:0;"></div>
+        </div>
+        <div id="c-labels" style="margin-top:5px; font-size:9px; font-weight:bold; display:flex; gap:10px;">
+            <span style="color:#f59aff">ROTAR</span><span style="color:#00d1ff">MOVER</span>
+        </div>
     </div>
 
     <div id="header-title"><h1>Visualizador de modelo 3D con realidad aumentada</h1></div>
 
     <div id="sidebar-left">
         <div class="btn-wrapper">
-            <button class="pushable" id="btnUp">
-                <span class="shadow"></span><span class="edge edge-up"></span><span class="front front-up">SUBIR</span>
-            </button>
+            <button class="pushable" id="btnUp"><span class="shadow"></span><span class="edge edge-up"></span><span class="front front-up">SUBIR</span></button>
+            <span class="diagonal-label label-subir">SUBIR</span>
         </div>
         <div class="btn-wrapper">
-            <button class="pushable" id="btnDown">
-                <span class="shadow"></span><span class="edge edge-down"></span><span class="front front-down">BAJAR</span>
-            </button>
+            <span class="diagonal-label label-bajar">BAJAR</span>
+            <button class="pushable" id="btnDown"><span class="shadow"></span><span class="edge edge-down"></span><span class="front front-down">BAJAR</span></button>
         </div>
     </div>
 
     <div id="container3d"></div>
 
     <div id="sidebar-right">
-        <span style="writing-mode: vertical-rl; margin-bottom: 15px; font-size: 11px; color: #38bdf8; font-weight: bold;">ESCALAR DISEÑO</span>
+        <span style="writing-mode: vertical-rl; margin-bottom: 15px; font-size: 11px; color: #00d1ff; font-weight: bold; letter-spacing: 2px;">ESCALAR DISEÑO</span>
         <input type="range" id="scaleInput" class="vertical-slider" min="0.1" max="15" step="0.1" value="1">
-        <div id="scale-val" style="margin-top:10px; font-weight:bold; color:#38bdf8;">1.0x</div>
+        <div id="scale-val" style="margin-top:10px; font-weight:bold; color:#00d1ff;">1.0x</div>
     </div>
 
     <button class="button-qr" id="generateBtn">
-        <div class="dots_border"></div>
+        <div class="glow-border"></div>
         <span class="text_button">GENERAR CÓDIGO QR</span>
     </button>
 
     <div id="presentation-view">
-        <button id="closeBtn" style="position:absolute; top:30px; left:30px; padding:12px 25px; border-radius:50px; cursor:pointer;">← VOLVER</button>
+        <button id="closeBtn" style="position:absolute; top:30px; left:30px; padding:12px 25px; border-radius:50px; cursor:pointer; font-weight:bold; border: 1px solid #ccc; background: white;">← VOLVER</button>
         <div style="text-align:center"><h3>1. ESCANEA EL QR</h3><div id="qrcode"></div></div>
         <div style="text-align:center"><h3>2. APUNTA AL MARCADOR</h3><img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" style="border:40px solid black; width:280px;"></div>
     </div>
@@ -121,11 +124,13 @@
         const mouse = new THREE.Vector2();
         let isDragging = false, isRotating = false;
 
+        const hud = document.getElementById('custom-cursor');
+
         init();
 
         function init() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0f172a);
+            scene.background = new THREE.Color(0x050811);
             camera = new THREE.PerspectiveCamera(45, (window.innerWidth - 250) / window.innerHeight, 0.1, 1000);
             camera.position.set(5, 4, 8);
 
@@ -133,104 +138,78 @@
             renderer.setSize(window.innerWidth - 250, window.innerHeight);
             renderer.outputColorSpace = THREE.SRGBColorSpace;
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.4;
+            renderer.toneMappingExposure = 1.5;
             document.getElementById('container3d').appendChild(renderer.domElement);
 
-            scene.add(new THREE.AmbientLight(0xffffff, 1.8));
-            const sun = new THREE.DirectionalLight(0xffffff, 2.5);
+            scene.add(new THREE.AmbientLight(0xffffff, 2));
+            const sun = new THREE.DirectionalLight(0xffffff, 3);
             sun.position.set(5, 15, 10);
             scene.add(sun);
 
-            scene.add(new THREE.GridHelper(15, 30, 0x444444, 0x222222));
-            scene.add(new THREE.AxesHelper(6));
-
-            new THREE.TextureLoader().load('https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg', (t) => {
-                const marker = new THREE.Mesh(new THREE.PlaneGeometry(3, 3), new THREE.MeshBasicMaterial({ map: t }));
-                marker.rotation.x = -Math.PI / 2;
-                scene.add(marker);
-            });
+            scene.add(new THREE.GridHelper(15, 30, 0x1e293b, 0x0f172a));
 
             new GLTFLoader().load('modelo1.glb', (g) => { robot = g.scene; scene.add(robot); });
 
             controls = new OrbitControls(camera, renderer.domElement);
-            controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+            
+            window.addEventListener('mousemove', (e) => {
+                hud.style.left = e.clientX + 'px'; hud.style.top = e.clientY + 'px';
+                mouse.x = ((e.clientX - 150) / (window.innerWidth - 250)) * 2 - 1;
+                mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                if(robot){
+                    const hits = raycaster.intersectObject(robot, true);
+                    if(hits.length > 0){
+                        hud.style.opacity = "1"; document.body.style.cursor = "none";
+                        document.getElementById('c-left').style.opacity = "1";
+                        document.getElementById('c-right').style.opacity = "1";
+                    } else if(!isDragging && !isRotating){
+                        hud.style.opacity = "0"; document.body.style.cursor = "default";
+                    }
+                    if(isDragging){
+                        const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -robot.position.y);
+                        const pt = new THREE.Vector3(); raycaster.ray.intersectPlane(plane, pt);
+                        robot.position.x = pt.x; robot.position.z = pt.z;
+                    }
+                    if(isRotating){ robot.rotation.y += e.movementX * 0.01; robot.rotation.x += e.movementY * 0.01; }
+                }
+            });
 
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mousedown', onMouseDown);
-            window.addEventListener('mouseup', () => { controls.enabled = true; isDragging = isRotating = false; });
-            window.addEventListener('resize', onWindowResize);
-            animate();
-        }
-
-        function onMouseMove(e) {
-            const cursorHUD = document.getElementById('custom-cursor');
-            cursorHUD.style.left = (e.clientX + 15) + 'px';
-            cursorHUD.style.top = (e.clientY + 15) + 'px';
-
-            mouse.x = ((e.clientX - 150) / (window.innerWidth - 250)) * 2 - 1;
-            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
-
-            if(robot) {
+            window.addEventListener('mousedown', (e) => {
                 const hits = raycaster.intersectObject(robot, true);
-                if(hits.length > 0) {
-                    cursorHUD.style.opacity = "1";
-                    document.body.style.cursor = "none";
-                } else if(!isDragging && !isRotating) {
-                    cursorHUD.style.opacity = "0";
-                    document.body.style.cursor = "default";
+                if(hits.length > 0){
+                    controls.enabled = false;
+                    if(e.button === 0) isRotating = true;
+                    if(e.button === 2) isDragging = true;
                 }
+            });
 
-                if(isDragging) {
-                    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -robot.position.y);
-                    const point = new THREE.Vector3();
-                    raycaster.ray.intersectPlane(plane, point);
-                    robot.position.x = point.x;
-                    robot.position.z = point.z;
-                }
-                if(isRotating) {
-                    robot.rotation.y += e.movementX * 0.01;
-                    robot.rotation.x += e.movementY * 0.01;
-                }
-            }
-        }
-
-        function onMouseDown(e) {
-            const hits = raycaster.intersectObject(robot, true);
-            if(hits.length > 0) {
-                controls.enabled = false;
-                if(e.button === 0) isRotating = true;
-                if(e.button === 2) isDragging = true;
-            }
-        }
-
-        function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
-        function onWindowResize() {
-            camera.aspect = (window.innerWidth - 250) / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth - 250, window.innerHeight);
+            window.addEventListener('mouseup', () => { controls.enabled = true; isDragging = isRotating = false; });
+            window.addEventListener('resize', () => {
+                camera.aspect = (window.innerWidth - 250) / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth - 250, window.innerHeight);
+            });
+            
+            function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
+            animate();
         }
 
         document.getElementById('btnUp').onclick = () => { if(robot) robot.position.y += 0.2; };
         document.getElementById('btnDown').onclick = () => { if(robot) robot.position.y -= 0.2; };
         document.getElementById('scaleInput').oninput = function() {
-            const val = parseFloat(this.value);
-            if(robot) robot.scale.set(val, val, val);
-            document.getElementById('scale-val').innerText = val.toFixed(1) + "x";
+            if(robot) { robot.scale.set(this.value, this.value, this.value); document.getElementById('scale-val').innerText = this.value + "x"; }
         };
 
         document.getElementById('generateBtn').onclick = () => {
-            // Pequeño retraso para que se vea la animación del botón antes de cambiar
-            setTimeout(() => {
-                const s = document.getElementById('scaleInput').value;
-                const p = robot.position, r = robot.rotation;
-                let baseUrl = window.location.href.split('index.html')[0].split('?')[0];
-                if (!baseUrl.endsWith('/')) baseUrl += '/';
-                let finalUrl = `${baseUrl}ar.html?s=${s}&px=${p.x.toFixed(2)}&py=${p.y.toFixed(2)}&pz=${p.z.toFixed(2)}&rx=${THREE.MathUtils.radToDeg(r.x).toFixed(0)}&ry=${THREE.MathUtils.radToDeg(r.y).toFixed(0)}&rz=${THREE.MathUtils.radToDeg(r.z).toFixed(0)}`;
-                document.getElementById('qrcode').innerHTML = "";
-                new QRCode(document.getElementById("qrcode"), { text: finalUrl, width: 300, height: 300 });
-                document.getElementById('presentation-view').style.display = 'flex';
-            }, 300);
+            const s = document.getElementById('scaleInput').value;
+            const p = robot.position, r = robot.rotation;
+            let baseUrl = window.location.href.split('index.html')[0].split('?')[0];
+            if (!baseUrl.endsWith('/')) baseUrl += '/';
+            let finalUrl = `${baseUrl}ar.html?s=${s}&px=${p.x.toFixed(2)}&py=${p.y.toFixed(2)}&pz=${p.z.toFixed(2)}&rx=${THREE.MathUtils.radToDeg(r.x).toFixed(0)}&ry=${THREE.MathUtils.radToDeg(r.y).toFixed(0)}&rz=${THREE.MathUtils.radToDeg(r.z).toFixed(0)}`;
+            document.getElementById('qrcode').innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), { text: finalUrl, width: 300, height: 300 });
+            document.getElementById('presentation-view').style.display = 'flex';
         };
         document.getElementById('closeBtn').onclick = () => document.getElementById('presentation-view').style.display = 'none';
     </script>
