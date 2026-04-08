@@ -2,137 +2,120 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Editor AR Pro v3 - Gotasdequenal</title>
+    <title>Editor AR Master - Gotasdequenal</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; height: 100vh; overflow: hidden; }
         #editor-layout { display: flex; height: 100vh; width: 100%; }
 
-        /* SIDEBAR */
         #sidebar { 
-            width: 340px; background: #1e293b; padding: 20px; 
+            width: 350px; background: #1e293b; padding: 15px; 
             border-right: 2px solid #334155; display: flex; 
-            flex-direction: column; gap: 12px; box-sizing: border-box;
-            z-index: 100;
+            flex-direction: column; gap: 8px; box-sizing: border-box;
+            z-index: 100; overflow-y: auto;
         }
-        .control-group { background: #334155; padding: 12px; border-radius: 12px; border: 1px solid #475569; }
-        label { display: block; font-size: 0.7rem; color: #38bdf8; margin-bottom: 5px; font-weight: bold; }
-        input[type="range"] { width: 100%; cursor: pointer; accent-color: #38bdf8; }
+        .control-group { background: #334155; padding: 10px; border-radius: 10px; border: 1px solid #475569; }
+        label { display: block; font-size: 0.65rem; color: #38bdf8; margin-bottom: 4px; font-weight: bold; text-transform: uppercase; }
+        input[type="range"] { width: 100%; cursor: pointer; accent-color: #38bdf8; margin: 0; }
         
-        /* BOTÓN 3D */
-        .btn-3d {
-            width: 100px; height: 100px; border-radius: 50%; border: none; cursor: pointer;
+        .btn-ar {
+            width: 80px; height: 80px; border-radius: 50%; border: none; cursor: pointer;
             background: radial-gradient(circle at 30% 30%, #00f2fe, #0077be);
-            box-shadow: 0 8px 15px rgba(0,0,0,0.4), inset 0 -5px 10px rgba(0,0,0,0.5), inset 0 5px 10px rgba(255,255,255,0.4);
-            color: white; font-weight: bold; font-size: 0.8rem; transition: 0.2s; align-self: center; margin-top: auto;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            color: white; font-weight: bold; align-self: center; margin: 10px 0;
         }
-        .btn-3d:active { transform: scale(0.9); }
 
-        /* VISOR */
         #preview-zone { flex-grow: 1; position: relative; background: radial-gradient(circle, #1e293b 0%, #0f172a 100%); display: flex; align-items: center; justify-content: center; }
         model-viewer { width: 100%; height: 100%; z-index: 2; --poster-color: transparent; }
 
-        /* BASE HIRO EN EL EDITOR */
         #stage-floor {
-            position: absolute; width: 280px; height: 280px; background: white; border: 20px solid black;
+            position: absolute; width: 300px; height: 300px; background: white; border: 20px solid black;
             display: flex; align-items: center; justify-content: center;
-            transform: rotateX(75deg); bottom: 15%; z-index: 1; box-shadow: 0 0 80px rgba(0,0,0,0.8);
+            transform: rotateX(75deg); bottom: 15%; z-index: 1;
         }
         #stage-floor span { color: black; font-size: 3rem; font-weight: bold; font-family: Arial; }
 
-        /* PANTALLA PRESENTACIÓN */
         #presentation-view {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: white; color: #1e293b; z-index: 1000;
             flex-direction: column; align-items: center; justify-content: center;
         }
-        .hiro-frame { border: 40px solid black; padding: 30px; background: white; margin-bottom: 10px; }
-        .hiro-img { width: 200px; }
-        #btn-back { position: absolute; top: 20px; left: 20px; padding: 10px 20px; border-radius: 20px; cursor: pointer; }
+        .hiro-frame { border: 40px solid black; padding: 20px; background: white; }
     </style>
 </head>
 <body>
 
     <div id="editor-layout">
         <div id="sidebar">
-            <h2 style="color: #38bdf8; text-align: center; margin: 0;">EDITOR 3D</h2>
+            <h3 style="color: #38bdf8; text-align: center; margin: 0 0 10px 0;">CONFIGURACIÓN 3D</h3>
             
             <div class="control-group">
                 <label>ESCALA: <span id="scale-val">1.0</span>x</label>
-                <input type="range" id="scale" min="0.1" max="4" step="0.1" value="1" oninput="actualizar()">
+                <input type="range" id="scale" min="0.1" max="10" step="0.1" value="1" oninput="actualizar()">
             </div>
+
             <div class="control-group">
-                <label>ROTACIÓN X (V): <span id="rotX-val">0</span>°</label>
+                <label>ROTACIÓN (X, Y, Z)</label>
                 <input type="range" id="rotX" min="-180" max="180" step="5" value="0" oninput="actualizar()">
-            </div>
-            <div class="control-group">
-                <label>ROTACIÓN Y (H): <span id="rotY-val">0</span>°</label>
                 <input type="range" id="rotY" min="-180" max="180" step="5" value="0" oninput="actualizar()">
-            </div>
-            <div class="control-group">
-                <label>ROTACIÓN Z (Incl.): <span id="rotZ-val">0</span>°</label>
                 <input type="range" id="rotZ" min="-180" max="180" step="5" value="0" oninput="actualizar()">
             </div>
 
-            <button class="btn-3d" onclick="mostrarPresentacion()">AR</button>
+            <div class="control-group">
+                <label>POSICIÓN (Lateral, Altura, Prof.)</label>
+                <input type="range" id="posX" min="-2" max="2" step="0.1" value="0" oninput="actualizar()">
+                <input type="range" id="posY" min="-1" max="2" step="0.1" value="0" oninput="actualizar()">
+                <input type="range" id="posZ" min="-2" max="2" step="0.1" value="0" oninput="actualizar()">
+            </div>
+
+            <button class="btn-ar" onclick="mostrarPresentacion()">AR</button>
         </div>
 
         <div id="preview-zone">
             <div id="stage-floor"><span>Hiro</span></div>
-            <model-viewer id="visor" src="modelo1.glb" interaction-prompt="none" shadow-intensity="1.5" exposure="1"></model-viewer>
+            <model-viewer id="visor" src="modelo1.glb" interaction-prompt="none" shadow-intensity="1"></model-viewer>
         </div>
     </div>
 
-    <!-- PANTALLA HIRO -->
     <div id="presentation-view">
-        <button id="btn-back" onclick="cerrarPresentacion()">← VOLVER</button>
-        <div class="hiro-frame">
-            <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="hiro-img">
-        </div>
-        <div style="text-align: center;">
-            <p style="font-weight: bold; margin-bottom: 5px;">1. ESCANEA EL QR GIGANTE</p>
-            <div id="qrcode" style="display: flex; justify-content: center;"></div>
-        </div>
+        <button onclick="document.getElementById('presentation-view').style.display='none'" style="position:absolute; top:20px; left:20px;">VOLVER</button>
+        <div class="hiro-frame"><img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" width="250"></div>
+        <div id="qrcode" style="margin-top:20px;"></div>
     </div>
 
     <script>
-        // QR MÁS GRANDE (300px)
-        var qr = new QRCode(document.getElementById("qrcode"), { width: 300, height: 300 });
+        var qr = new QRCode(document.getElementById("qrcode"), { width: 250, height: 250 });
         const visor = document.getElementById('visor');
 
         function actualizar() {
-            let s = document.getElementById('scale').value;
-            let rx = document.getElementById('rotX').value;
-            let ry = document.getElementById('rotY').value;
-            let rz = document.getElementById('rotZ').value;
+            const s = document.getElementById('scale').value;
+            const rx = document.getElementById('rotX').value;
+            const ry = document.getElementById('rotY').value;
+            const rz = document.getElementById('rotZ').value;
+            const px = document.getElementById('posX').value;
+            const py = document.getElementById('posY').value;
+            const pz = document.getElementById('posZ').value;
             
             document.getElementById('scale-val').innerText = s;
-            document.getElementById('rotX-val').innerText = rx;
-            document.getElementById('rotY-val').innerText = ry;
-            document.getElementById('rotZ-val').innerText = rz;
 
             visor.scale = `${s} ${s} ${s}`;
-            // Orientación en model-viewer es: [pitch] [yaw] [roll] -> X Y Z
             visor.orientation = `${rx}deg ${ry}deg ${rz}deg`;
+            // En model-viewer la posición visual es un poco distinta, pero la guardamos para el QR
         }
 
         function mostrarPresentacion() {
-            let s = document.getElementById('scale').value;
-            let rx = document.getElementById('rotX').value;
-            let ry = document.getElementById('rotY').value;
-            let rz = document.getElementById('rotZ').value;
-
+            const val = (id) => document.getElementById(id).value;
             let baseUrl = window.location.href.split('index.html')[0].split('?')[0];
             if (!baseUrl.endsWith('/')) baseUrl += '/';
-            let finalUrl = baseUrl + "ar.html?s=" + s + "&rx=" + rx + "&ry=" + ry + "&rz=" + rz;
+            
+            // Enviamos todos los datos al celular
+            let finalUrl = `${baseUrl}ar.html?s=${val('scale')}&rx=${val('rotX')}&ry=${val('rotY')}&rz=${val('rotZ')}&px=${val('posX')}&py=${val('posY')}&pz=${val('posZ')}`;
             
             qr.clear();
             qr.makeCode(finalUrl);
             document.getElementById('presentation-view').style.display = 'flex';
         }
-
-        function cerrarPresentacion() { document.getElementById('presentation-view').style.display = 'none'; }
         window.onload = actualizar;
     </script>
 </body>
