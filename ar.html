@@ -7,7 +7,6 @@
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
-        /* FORZAR PANTALLA COMPLETA TOTAL SIN FRANJAS */
         #arjs-video { 
             width: 100vw !important; height: 100vh !important; 
             object-fit: cover !important; position: fixed !important; 
@@ -16,13 +15,14 @@
     </style>
 </head>
 <body style="margin: 0; background: transparent;">
+    <!-- ACTIVAMOS COLOR MANAGEMENT Y PHYSICALLY CORRECT LIGHTS PARA MÁXIMO DETALLE -->
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; patternRatio: 0.5;" vr-mode-ui="enabled: false" renderer="colorManagement: true; physicallyCorrectLights: true; alpha: true; antialias: true;">
         
         <a-assets><a-asset-item id="modelo" src="modelo1.glb"></a-asset-item></a-assets>
         
-        <!-- Iluminación Extrema para detalles GLB -->
+        <!-- Iluminación avanzada idéntica al Editor PC -->
         <a-entity light="type: ambient; intensity: 2.2;"></a-entity>
-        <a-entity light="type: directional; intensity: 2; position: 1 4 3;"></a-entity>
+        <a-entity light="type: directional; intensity: 2.5; position: 1 5 3;"></a-entity>
         <a-entity light="type: hemisphere; color: #fff; groundColor: #000; intensity: 1.5;"></a-entity>
         
         <a-marker preset="hiro" id="marker" emitevents="true">
@@ -38,9 +38,10 @@
         el.setAttribute('position', `${p.get('px')} ${p.get('py')} ${p.get('pz')}`);
         el.setAttribute('rotation', `${p.get('rx')} ${p.get('ry')} ${p.get('rz')}`);
         
+        // Persistencia
         document.getElementById('marker').addEventListener('markerLost', () => { el.setAttribute('visible', 'true'); });
 
-        // Parche de fuerza bruta para ajustar el video al 100% de la pantalla
+        // Parche de ajuste de video 100%
         setInterval(() => {
             const video = document.querySelector('#arjs-video');
             if (video) { video.style.width = window.innerWidth + 'px'; video.style.height = window.innerHeight + 'px'; }
