@@ -14,77 +14,86 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0b0f1a; color: white; display: flex; height: 100vh; overflow: hidden; cursor: none; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0b0f1a; color: white; display: flex; height: 100vh; overflow: hidden; }
         
-        /* TÍTULO */
         #header-title { position: absolute; top: 0; width: 100%; text-align: center; padding: 15px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); z-index: 200; border-bottom: 1px solid #334155; }
         #header-title h1 { margin: 0; font-size: 1.1rem; color: #38bdf8; text-transform: uppercase; letter-spacing: 3px; }
 
-        /* CURSOR PERSONALIZADO */
-        #custom-cursor { position: fixed; pointer-events: none; z-index: 9999; display: flex; flex-direction: column; align-items: center; transition: transform 0.1s ease; }
-        #cursor-icon { width: 30px; height: 40px; border: 2px solid white; border-radius: 15px; position: relative; background: rgba(0,0,0,0.5); }
-        #cursor-icon::before { content: ''; position: absolute; top: 5px; left: 50%; width: 2px; height: 10px; background: white; transform: translateX(-100%); } /* Rueda */
-        .cursor-btn { position: absolute; top: 0; width: 50%; height: 40%; border-radius: 10px 10px 0 0; opacity: 0; }
-        .btn-left { left: 0; background: #38bdf8; }
-        .btn-right { right: 0; background: #f59aff; }
-        #cursor-label { margin-top: 8px; font-size: 10px; font-weight: bold; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; display: none; white-space: nowrap; }
+        /* CURSOR HUD INTELIGENTE */
+        #custom-cursor { position: fixed; pointer-events: none; z-index: 9999; display: flex; flex-direction: column; align-items: center; opacity: 0; transition: opacity 0.2s ease; }
+        #cursor-icon { width: 25px; height: 35px; border: 2px solid white; border-radius: 12px; position: relative; background: rgba(0,0,0,0.8); }
+        .cursor-btn { position: absolute; top: 0; width: 50%; height: 40%; border-radius: 8px 8px 0 0; }
+        .btn-left { left: 0; background: #f59aff; } /* ROSA PARA ROTAR */
+        .btn-right { right: 0; background: #38bdf8; } /* AZUL PARA MOVER */
+        .cursor-labels { margin-top: 5px; display: flex; gap: 10px; font-size: 10px; font-weight: bold; }
+        .lbl-rotar { color: #f59aff; }
+        .lbl-mover { color: #38bdf8; }
 
-        /* SIDEBAR IZQUIERDA */
-        #sidebar-left { width: 150px; background: #1e293b; border-right: 1px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 80px; z-index: 100; pointer-events: auto; }
+        /* SIDEBAR IZQUIERDA: BOTONES Y ETIQUETAS DIAGONALES */
+        #sidebar-left { width: 150px; background: #1e293b; border-right: 1px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 100px; z-index: 100; }
+        .btn-wrapper { position: relative; display: flex; flex-direction: column; align-items: center; }
+        
         .stacked-btn { transform: rotate(-25deg) skew(25deg); transform-style: preserve-3d; position: relative; width: 80px; height: 32px; border: none; background: transparent; cursor: pointer; }
         .stacked-btn span { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #2a2a2a; color: #fff; font-size: 18px; transition: 0.5s ease-out; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         .stacked-btn:hover span:nth-child(5) { opacity: 1; }
         
-        /* Animación Subir (Hacia arriba) */
-        #btnUp:hover span:nth-child(5) { transform: translate(30px, -30px); background: #52E19F; }
-        #btnUp:hover span:nth-child(4) { transform: translate(24px, -24px); opacity: .8; }
-        #btnUp:hover span:nth-child(3) { transform: translate(18px, -18px); opacity: .6; }
-        #btnUp:hover span:nth-child(2) { transform: translate(12px, -12px); opacity: .4; }
-        
-        /* Animación Bajar (Hacia abajo) */
-        #btnDown:hover span:nth-child(5) { transform: translate(-30px, 30px); background: #ef4444; }
-        #btnDown:hover span:nth-child(4) { transform: translate(-24px, 24px); opacity: .8; }
-        #btnDown:hover span:nth-child(3) { transform: translate(-18px, 18px); opacity: .6; }
-        #btnDown:hover span:nth-child(2) { transform: translate(-12px, 12px); opacity: .4; }
+        #btnUp:hover span:nth-child(5) { transform: translate(25px, -25px); background: #52E19F; }
+        #btnUp:hover span:nth-child(4) { transform: translate(20px, -20px); opacity: .8; }
+        #btnUp:hover span:nth-child(3) { transform: translate(15px, -15px); opacity: .6; }
+        #btnDown:hover span:nth-child(5) { transform: translate(-25px, 25px); background: #ef4444; }
+        #btnDown:hover span:nth-child(4) { transform: translate(-20px, 20px); opacity: .8; }
+        #btnDown:hover span:nth-child(3) { transform: translate(-15px, 15px); opacity: .6; }
+
+        .diagonal-label { font-size: 11px; font-weight: bold; transform: rotate(-25deg); position: absolute; white-space: nowrap; text-transform: uppercase; letter-spacing: 1px; }
+        .label-subir { color: #52E19F; bottom: -35px; left: 20px; }
+        .label-bajar { color: #ef4444; top: -35px; right: 20px; }
 
         /* SIDEBAR DERECHA */
         #sidebar-right { width: 100px; background: #1e293b; border-left: 1px solid #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
         .vertical-slider { appearance: slider-vertical; width: 8px; height: 300px; background: #475569; outline: none; }
 
-        /* BOTÓN GENERAR QR */
-        .Btn-Container { display: flex; width: 220px; height: 55px; background-color: #1d2129; border-radius: 40px; box-shadow: 0px 5px 15px rgba(0,0,0,0.5); justify-content: space-between; align-items: center; border: none; cursor: pointer; position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; }
-        .icon-Container { width: 45px; height: 45px; background-color: #38bdf8; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 3px solid #1d2129; margin-left: 5px; }
-        .text { width: calc(220px - 60px); color: white; font-weight: bold; font-size: 0.8em; letter-spacing: 1px; }
+        /* BOTÓN QR ANIMADO */
+        .Btn-Container { display: flex; width: 210px; height: 50px; background-color: #1d2129; border-radius: 40px; box-shadow: 0px 5px 15px rgba(0,0,0,0.5); justify-content: space-between; align-items: center; border: none; cursor: pointer; position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; transition: all 0.3s; }
+        .icon-Container { width: 42px; height: 42px; background-color: #38bdf8; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 3px solid #1d2129; margin-left: 4px; transition: all 0.3s; }
+        .text { width: calc(210px - 50px); color: white; font-weight: bold; font-size: 0.8em; letter-spacing: 1px; }
+        .Btn-Container:hover .icon-Container { transform: scale(1.1); background-color: #38bdf8; }
+        .Btn-Container:hover .icon-Container svg { animation: arrow 1s linear infinite; }
+        @keyframes arrow { 0% { opacity: 0; transform: translateX(-5px); } 100% { opacity: 1; transform: translateX(5px); } }
 
+        #container3d { flex-grow: 1; position: relative; }
         #presentation-view { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; color: black; z-index: 2000; flex-direction: row; align-items: center; justify-content: center; gap: 80px; }
     </style>
 </head>
 <body>
 
-    <!-- HUD DEL CURSOR -->
     <div id="custom-cursor">
         <div id="cursor-icon">
-            <div class="cursor-btn btn-left" id="m-left"></div>
-            <div class="cursor-btn btn-right" id="m-right"></div>
+            <div class="cursor-btn btn-left"></div>
+            <div class="cursor-btn btn-right"></div>
         </div>
-        <div id="cursor-label"></div>
+        <div class="cursor-labels">
+            <span class="lbl-rotar">ROTAR</span>
+            <span class="lbl-mover">MOVER</span>
+        </div>
     </div>
 
-    <div id="header-title">
-        <h1>Visualizador de modelo 3D con realidad aumentada</h1>
-    </div>
+    <div id="header-title"><h1>Visualizador de modelo 3D con realidad aumentada</h1></div>
 
     <div id="sidebar-left">
-        <p style="color:#52E19F; font-weight:bold; font-size:12px;">SUBIR</p>
-        <button class="stacked-btn" id="btnUp"><span>▲</span><span>▲</span><span>▲</span><span>▲</span><span>▲</span></button>
-        <button class="stacked-btn" id="btnDown"><span>▼</span><span>▼</span><span>▼</span><span>▼</span><span>▼</span></button>
-        <p style="color:#ef4444; font-weight:bold; font-size:12px;">BAJAR</p>
+        <div class="btn-wrapper">
+            <button class="stacked-btn" id="btnUp"><span>▲</span><span>▲</span><span>▲</span><span>▲</span><span>▲</span></button>
+            <span class="diagonal-label label-subir">SUBIR</span>
+        </div>
+        <div class="btn-wrapper">
+            <span class="diagonal-label label-bajar">BAJAR</span>
+            <button class="stacked-btn" id="btnDown"><span>▼</span><span>▼</span><span>▼</span><span>▼</span><span>▼</span></button>
+        </div>
     </div>
 
-    <div id="container3d" style="flex-grow: 1;"></div>
+    <div id="container3d"></div>
 
     <div id="sidebar-right">
-        <span style="writing-mode: vertical-rl; margin-bottom: 15px; font-size: 12px; color: #38bdf8; font-weight: bold;">ESCALAR DISEÑO</span>
+        <span style="writing-mode: vertical-rl; margin-bottom: 15px; font-size: 11px; color: #38bdf8; font-weight: bold;">ESCALAR DISEÑO</span>
         <input type="range" id="scaleInput" class="vertical-slider" min="0.1" max="15" step="0.1" value="1">
         <div id="scale-val" style="margin-top:10px; font-weight:bold; color:#38bdf8;">1.0x</div>
     </div>
@@ -92,7 +101,7 @@
     <button class="Btn-Container" id="generateBtn">
         <span class="text">GENERAR CÓDIGO QR</span>
         <span class="icon-Container">
-          <svg width="16" height="18" viewBox="0 0 16 18" fill="none"><path d="M8 1L15 9L8 17M15 9H1" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg width="18" height="18" viewBox="0 0 16 18" fill="none"><path d="M8 1L15 9L8 17M15 9H1" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </span>
     </button>
 
@@ -107,15 +116,12 @@
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-        let scene, camera, renderer, controls, robot, markerPlane;
+        let scene, camera, renderer, controls, robot;
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
         let isDragging = false, isRotating = false;
 
-        const cursor = document.getElementById('custom-cursor');
-        const cLabel = document.getElementById('cursor-label');
-        const cLeft = document.getElementById('m-left');
-        const cRight = document.getElementById('m-right');
+        const cursorHUD = document.getElementById('custom-cursor');
 
         init();
 
@@ -123,7 +129,7 @@
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0f172a);
             camera = new THREE.PerspectiveCamera(45, (window.innerWidth - 250) / window.innerHeight, 0.1, 1000);
-            camera.position.set(4, 3, 6);
+            camera.position.set(5, 4, 8);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth - 250, window.innerHeight);
@@ -137,21 +143,22 @@
             sun.position.set(5, 15, 10);
             scene.add(sun);
 
-            // EJES Y GRILLA
-            scene.add(new THREE.GridHelper(10, 20, 0x444444, 0x222222));
-            scene.add(new THREE.AxesHelper(5));
+            scene.add(new THREE.GridHelper(15, 30, 0x444444, 0x222222));
+            const axes = new THREE.AxesHelper(6);
+            scene.add(axes);
 
-            // MARCADOR BASE
             new THREE.TextureLoader().load('https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg', (t) => {
-                markerPlane = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2.5), new THREE.MeshBasicMaterial({ map: t }));
-                markerPlane.rotation.x = -Math.PI / 2;
-                scene.add(markerPlane);
+                const marker = new THREE.Mesh(new THREE.PlaneGeometry(3, 3), new THREE.MeshBasicMaterial({ map: t }));
+                marker.rotation.x = -Math.PI / 2;
+                marker.position.y = 0.01;
+                scene.add(marker);
             });
 
             new GLTFLoader().load('modelo1.glb', (g) => { robot = g.scene; scene.add(robot); });
 
             controls = new OrbitControls(camera, renderer.domElement);
-            
+            controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+
             window.addEventListener('mousemove', onMouseMove);
             window.addEventListener('mousedown', onMouseDown);
             window.addEventListener('mouseup', onMouseUp);
@@ -160,35 +167,30 @@
         }
 
         function onMouseMove(e) {
-            // Posición del Cursor HUD
-            cursor.style.left = e.clientX + 'px';
-            cursor.style.top = e.clientY + 'px';
+            cursorHUD.style.left = (e.clientX + 15) + 'px';
+            cursorHUD.style.top = (e.clientY + 15) + 'px';
 
             mouse.x = ((e.clientX - 150) / (window.innerWidth - 250)) * 2 - 1;
             mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-
             raycaster.setFromCamera(mouse, camera);
-            
-            // Lógica de Cursor sobre el Robot
+
             if(robot) {
                 const hits = raycaster.intersectObject(robot, true);
                 if(hits.length > 0) {
-                    cLabel.style.display = 'block';
-                    cLabel.style.background = '#38bdf8';
-                    cLabel.innerText = "Click Izq: Rotar | Der: Mover";
-                    cLeft.style.opacity = "1"; cRight.style.opacity = "1";
-                } else {
-                    cLabel.style.display = 'none';
-                    cLeft.style.opacity = "0"; cRight.style.opacity = "0";
+                    cursorHUD.style.opacity = "1";
+                    document.body.style.cursor = "none";
+                } else if(!isDragging && !isRotating) {
+                    cursorHUD.style.opacity = "0";
+                    document.body.style.cursor = "default";
                 }
 
-                // Lógica de arrastre inteligente (orientado a cámara)
                 if(isDragging) {
-                    const planeTarget = new THREE.Plane(new THREE.Vector3(0, 1, 0), -robot.position.y);
-                    const intersectPoint = new THREE.Vector3();
-                    raycaster.ray.intersectPlane(planeTarget, intersectPoint);
-                    robot.position.x = intersectPoint.x;
-                    robot.position.z = intersectPoint.z;
+                    const planeNormal = new THREE.Vector3(0, 1, 0);
+                    const plane = new THREE.Plane(planeNormal, -robot.position.y);
+                    const point = new THREE.Vector3();
+                    raycaster.ray.intersectPlane(plane, point);
+                    robot.position.x = point.x;
+                    robot.position.z = point.z;
                 }
                 if(isRotating) {
                     robot.rotation.y += e.movementX * 0.01;
@@ -198,23 +200,15 @@
         }
 
         function onMouseDown(e) {
-            if(robot) {
-                const hits = raycaster.intersectObject(robot, true);
-                if(hits.length > 0) {
-                    controls.enabled = false;
-                    if(e.button === 0) { isRotating = true; cursor.style.transform = "scale(1.2) rotate(15deg)"; }
-                    if(e.button === 2) { isDragging = true; cursor.style.transform = "scale(1.2)"; }
-                }
+            const hits = raycaster.intersectObject(robot, true);
+            if(hits.length > 0) {
+                controls.enabled = false;
+                if(e.button === 0) isRotating = true;
+                if(e.button === 2) isDragging = true;
             }
-            // Si hace click en el fondo para cámara
-            if(e.button === 2 && !isDragging) cursor.style.filter = "hue-rotate(90deg)"; 
         }
 
-        function onMouseUp() {
-            controls.enabled = true; isDragging = isRotating = false;
-            cursor.style.transform = "scale(1) rotate(0deg)";
-            cursor.style.filter = "none";
-        }
+        function onMouseUp() { controls.enabled = true; isDragging = isRotating = false; }
 
         function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
         function onWindowResize() {
@@ -223,11 +217,12 @@
             renderer.setSize(window.innerWidth - 250, window.innerHeight);
         }
 
-        // ACCIONES UI
-        document.getElementById('btnUp').onclick = () => { if(robot) robot.position.y += 0.1; };
-        document.getElementById('btnDown').onclick = () => { if(robot) robot.position.y -= 0.1; };
+        document.getElementById('btnUp').onclick = () => { if(robot) robot.position.y += 0.2; };
+        document.getElementById('btnDown').onclick = () => { if(robot) robot.position.y -= 0.2; };
         document.getElementById('scaleInput').oninput = function() {
-            if(robot) { robot.scale.set(this.value, this.value, this.value); document.getElementById('scale-val').innerText = this.value + "x"; }
+            const val = parseFloat(this.value);
+            if(robot) robot.scale.set(val, val, val);
+            document.getElementById('scale-val').innerText = val.toFixed(1) + "x";
         };
 
         document.getElementById('generateBtn').onclick = () => {
