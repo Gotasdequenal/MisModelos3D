@@ -10,7 +10,7 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
         #arjs-video { width: 100vw !important; height: 100vh !important; object-fit: cover !important; position: fixed !important; top: 0; left: 0; z-index: -1; }
         .a-canvas { width: 100% !important; height: 100% !important; position: fixed; top: 0; left: 0; }
-        .mode-btn { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 18px 30px; background: #00d1ff; color: #000; border: none; border-radius: 50px; font-weight: bold; z-index: 9999; font-size: 1rem; cursor: pointer; box-shadow: 0 0 20px rgba(0,209,255,0.8); }
+        .mode-btn { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 18px 30px; background: #00d1ff; color: #000; border: none; border-radius: 50px; font-weight: bold; z-index: 9999; box-shadow: 0 0 20px rgba(0,209,255,0.8); cursor: pointer; }
         model-viewer { display: none; width: 100%; height: 100%; position: fixed; top:0; left:0; z-index: 10000; }
     </style>
 </head>
@@ -36,7 +36,7 @@
             el.setAttribute('gltf-model', m);
             el.setAttribute('scale', `${s} ${s} ${s}`);
             el.setAttribute('position', `${p.get('px')} ${p.get('py')} ${p.get('pz')}`);
-            el.setAttribute('rotation', `${p.get('rx')*57.3} ${p.get('ry')*57.3} ${p.get('rz')*57.3}`);
+            el.setAttribute('rotation', `${p.get('rx')} ${p.get('ry')} ${p.get('rz')}`);
             fv.src = m;
         }
         document.getElementById('marker').addEventListener('markerLost', () => { el.setAttribute('visible', 'true'); });
