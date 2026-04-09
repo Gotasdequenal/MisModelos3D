@@ -18,9 +18,26 @@
             position: fixed !important;
         }
         .a-canvas { width: 100% !important; height: 100% !important; }
+
+        /* ETIQUETA DE VERSION */
+        #version-tag { 
+            position: fixed; 
+            bottom: 10px; 
+            right: 10px; 
+            font-size: 10px; 
+            color: white; 
+            z-index: 1000; 
+            font-weight: bold; 
+            opacity: 0.5; 
+            pointer-events: none; 
+            font-family: sans-serif;
+        }
     </style>
 </head>
 <body style="margin: 0; background: transparent;">
+    <!-- Etiqueta visual -->
+    <div id="version-tag">VERSION 1.5</div>
+
     <!-- Optimizamos la resolución para evitar el zoom exagerado -->
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 1280; displayHeight: 720;" vr-mode-ui="enabled: false">
         <a-marker preset="hiro">
