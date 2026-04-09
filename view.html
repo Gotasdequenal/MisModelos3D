@@ -15,14 +15,15 @@
     </style>
 </head>
 <body style="margin: 0; background: transparent;">
-    <!-- Renderizado de alta calidad activado -->
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 1280; displayHeight: 720;" vr-mode-ui="enabled: false" renderer="colorManagement: true; physicallyCorrectLights: true;">
+    <!-- Renderizado con corrección de color pero luces más potentes -->
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 1280; displayHeight: 720;" vr-mode-ui="enabled: false" renderer="colorManagement: true;">
         
         <a-assets><a-asset-item id="modelo" src=""></a-asset-item></a-assets>
 
-        <!-- Luces idénticas al visualizador -->
+        <!-- ILUMINACIÓN REFORZADA PARA DETALLES -->
         <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
-        <a-entity light="type: directional; intensity: 1.5; position: 1 4 3;"></a-entity>
+        <a-entity light="type: directional; intensity: 1.8; position: 1 4 3;"></a-entity>
+        <a-entity light="type: hemisphere; color: #ffffff; groundColor: #000000; intensity: 1.2;"></a-entity>
         
         <a-marker preset="hiro">
             <a-entity id="entidad" gltf-model="" position="0 0 0" scale="1 1 1"></a-entity>
@@ -36,6 +37,7 @@
         const s = p.get('s') || "1";
         if(m) {
             const el = document.getElementById('entidad');
+            // Usamos decode para asegurar que la URL del modelo sea correcta
             el.setAttribute('gltf-model', decodeURIComponent(m));
             el.setAttribute('scale', `${s} ${s} ${s}`);
         }
