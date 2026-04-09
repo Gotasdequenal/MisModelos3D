@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Motores AR (1.5 Intacto para calidad) -->
+    <!-- Motores AR (1.5 Intacto) -->
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
@@ -27,10 +27,11 @@
             border: 1px solid #00d1ff; pointer-events: none;
         }
 
-        /* BOTONES DE CONTROL */
-        .controls-container {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+        /* CONTENEDOR DE BOTONES (OVERLAY) */
+        #ar-overlay {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 15px; z-index: 10000; width: 90%; justify-content: center;
+            pointer-events: none; /* Dejar pasar toques si no es en botones */
         }
 
         .btn {
@@ -38,6 +39,7 @@
             font-weight: bold; font-size: 14px; cursor: pointer;
             font-family: sans-serif; text-transform: uppercase;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            pointer-events: auto; /* Activar toques solo en botones */
         }
 
         .btn-blue { background: #00d1ff; color: black; }
@@ -54,34 +56,43 @@
 </head>
 <body style="margin: 0; background: transparent;">
     
-    <div id="version-tag">VERSION 2.0</div>
+    <div id="version-tag">VERSION 2.1</div>
 
+    <!-- LEYENDA -->
     <div id="top-msg" class="header-msg">
         Busca un marcador hiro para que salga la realidad aumenada
     </div>
 
-    <div class="controls-container" id="ui-controls">
-        <button class="btn btn-blue" id="btn-surface">Activar Ar</button>
-    </div>
-
-    <!-- BOTONES ADICIONALES PARA MODO SUPERFICIE (OCULTOS AL INICIO) -->
-    <div class="controls-container" id="surface-ui" style="display: none;">
-        <button class="btn btn-white" onclick="location.reload()">⬅ Modo QR</button>
-        <button class="btn btn-blue" id="btn-reset">🔄 Reiniciar AR</button>
+    <!-- ESTO ES EL OVERLAY QUE SE LLEVA EL CELULAR AL MODO AR -->
+    <div id="ar-overlay">
+        <!-- Este botón inicia el modo superficie -->
+        <button class="btn btn-blue" id="start-ar-btn">Activar Ar</button>
+        
+        <!-- Estos botones aparecen solo cuando el modo superficie está activo -->
+        <button class="btn btn-white" id="go-qr-btn" style="display: none;" onclick="location.reload()">⬅ Modo QR</button>
+        <button class="btn btn-blue" id="reset-ar-btn" style="display: none;">🔄 Reiniciar</button>
     </div>
 
     <!-- MODO 1: MARCADOR (MOTOR 1.5) -->
     <a-scene id="hiroScene" embedded arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 1280; displayHeight: 720;" vr-mode-ui="enabled: false" renderer="colorManagement: true; physicallyCorrectLights: true;">
         <a-assets><a-asset-item id="modelo" src=""></a-asset-item></a-assets>
-        <a-marker preset="hiro" id="markerHiro" smooth="true" smoothCount="10">
+        <a-marker preset="hiro" id="markerHiro">
             <a-entity id="entidad" gltf-model="" position="0 0 0" scale="1 1 1"></a-entity>
         </a-marker>
         <a-entity camera></a-entity>
     </a-scene>
 
     <!-- MODO 2: SUPERFICIE -->
-    <model-viewer id="floorViewer" src="" ar ar-modes="webxr scene-viewer quick-look" camera-controls shadow-intensity="1" environment-image="neutral">
-        <button slot="ar-button" id="real-ar-btn" style="display: none;"></button>
+    <model-viewer 
+        id="floorViewer" 
+        src="" 
+        ar 
+        ar-modes="webxr scene-viewer" 
+        camera-controls 
+        shadow-intensity="1" 
+        environment-image="neutral">
+        
+        <!-- Slot de overlay: lo que pongas aquí se verá dentro de la AR -->
     </model-viewer>
 
     <script>
@@ -93,6 +104,7 @@
         const fViewer = document.getElementById('floorViewer');
         const topMsg = document.getElementById('top-msg');
         const hiroScene = document.getElementById('hiroScene');
+        const arOverlay = document.getElementById('ar-overlay');
 
         if(m && m !== "null") {
             elMarker.setAttribute('gltf-model', m);
@@ -100,35 +112,41 @@
             fViewer.src = m;
         }
 
-        // ACCIÓN: ACTIVAR MODO SUPERFICIE
-        document.getElementById('btn-surface').onclick = () => {
-            topMsg.innerText = "Busca una superficie plana para activar el Ar";
-            document.getElementById('ui-controls').style.display = 'none';
-            document.getElementById('surface-ui').style.display = 'flex';
+        // VINCULAR EL OVERLAY AL VISOR DE GOOGLE
+        // Esto es clave para que los botones no desaparezcan
+        fViewer.appendChild(arOverlay);
+
+        // BOTÓN: EMPEZAR MODO SUPERFICIE
+        document.getElementById('start-ar-btn').onclick = () => {
+            topMsg.innerText = "Busca una superficie plana para colocar el diseño";
             
+            // Cambiar visibilidad de botones
+            document.getElementById('start-ar-btn').style.display = 'none';
+            document.getElementById('go-qr-btn').style.display = 'block';
+            document.getElementById('reset-ar-btn').style.display = 'block';
+            
+            // Pausar motor de marcador
             hiroScene.style.display = 'none';
             const video = document.querySelector('#arjs-video');
             if(video) video.pause();
 
             fViewer.style.display = 'block';
-            // Disparar el visor nativo
-            document.getElementById('real-ar-btn').click();
+            fViewer.activateAR();
         };
 
-        // ACCIÓN: REINICIAR POSICIÓN EN SUPERFICIE
-        document.getElementById('btn-reset').onclick = () => {
-            document.getElementById('real-ar-btn').click();
+        // BOTÓN: REINICIAR (Vuelve a pedir el suelo)
+        document.getElementById('reset-ar-btn').onclick = () => {
+            fViewer.activateAR();
         };
 
-        // DETECTAR SALIDA DE AR (POR LA X)
+        // DETECTAR SI EL USUARIO CIERRA CON LA "X" NATIVA
         fViewer.addEventListener('ar-status', (event) => {
             if (event.detail.status === 'not-presenting') {
-                // Si el usuario sale del modo nativo, refrescamos para evitar el freeze
                 location.reload();
             }
         });
 
-        // Forzar video a pantalla completa
+        // Parche pantalla completa
         setInterval(() => {
             const v = document.querySelector('#arjs-video');
             if (v && !v.paused) {
