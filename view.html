@@ -7,22 +7,27 @@
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
-        
         /* FIX: Forzar el video de la cámara a llenar TODA la pantalla sin franjas negras */
         #arjs-video { 
-            width: 100vw !important; 
-            height: 100vh !important; 
-            object-fit: cover !important; 
-            margin-left: 0 !important; 
-            top: 0 !important;
-            position: fixed !important;
+            width: 100vw !important; height: 100vh !important; 
+            object-fit: cover !important; margin-left: 0 !important; 
+            top: 0 !important; position: fixed !important;
         }
         .a-canvas { width: 100% !important; height: 100% !important; }
+        #version-tag { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: white; z-index: 1000; font-weight: bold; opacity: 0.4; pointer-events: none; }
     </style>
 </head>
 <body style="margin: 0; background: transparent;">
-    <!-- Optimizamos la resolución para evitar el zoom exagerado -->
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 1280; displayHeight: 720;" vr-mode-ui="enabled: false">
+    <div id="version-tag">VERSION 1.5</div>
+
+    <!-- Renderizado de alta calidad activado -->
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 1280; displayHeight: 720;" vr-mode-ui="enabled: false" renderer="colorManagement: true; physicallyCorrectLights: true;">
+        
+        <a-assets><a-asset-item id="modelo" src=""></a-asset-item></a-assets>
+
+        <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
+        <a-entity light="type: directional; intensity: 1.5; position: 1 4 3;"></a-entity>
+        
         <a-marker preset="hiro">
             <a-entity id="entidad" gltf-model="" position="0 0 0" scale="1 1 1"></a-entity>
         </a-marker>
