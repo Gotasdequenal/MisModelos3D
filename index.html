@@ -15,58 +15,31 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: white; display: flex; height: 100vh; overflow: hidden; }
-        
         #sidebar { width: 280px; background: #1a1a1a; padding: 25px; display: flex; flex-direction: column; gap: 25px; border-right: 1px solid #333; z-index: 100; }
-        h3 { margin: 0; font-size: 0.9rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-        
         input[type="range"] { width: 100%; cursor: pointer; accent-color: #00d1ff; }
-        button { padding: 15px; cursor: pointer; font-weight: bold; background: #00d1ff; border: none; border-radius: 8px; color: #000; transition: 0.3s; }
-        button:hover { background: #008fb3; transform: scale(1.02); }
-
+        button { padding: 15px; cursor: pointer; font-weight: bold; background: #00d1ff; border: none; border-radius: 8px; color: #000; }
         #container3d { flex-grow: 1; position: relative; background: #000; }
-        
-        #presentation { 
-            display: none; position: fixed; inset: 0; background: white; z-index: 2000; 
-            flex-direction: row; align-items: center; justify-content: center; gap: 80px; color: black; 
-        }
-        .pres-box { text-align: center; display: flex; flex-direction: column; align-items: center; }
+        #presentation { display: none; position: fixed; inset: 0; background: white; z-index: 2000; flex-direction: row; align-items: center; justify-content: center; gap: 80px; color: black; }
+        .pres-box { text-align: center; }
         .hiro-img { border: 40px solid black; width: 300px; height: 300px; }
-        #closeBtn { position: absolute; top: 20px; left: 20px; background: #eee; padding: 10px 20px; border-radius: 5px; cursor: pointer; color: #333; font-weight: bold; border: 1px solid #ccc; }
-
-        /* VERSION TAG */
-        #version-tag { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #444; font-weight: bold; z-index: 1000; }
+        #version-tag { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #444; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div id="version-tag">VERSION 1.2</div>
-
+    <div id="version-tag">VERSION 1.3</div>
     <div id="sidebar">
-        <div>
-            <h3>1. Subir Modelo</h3>
-            <input type="file" id="fileInput" accept=".glb">
-        </div>
-        
-        <div>
-            <h3>2. Escalar Diseño</h3>
-            <input type="range" id="scaleInput" min="0.1" max="10" step="0.1" value="1">
-            <p style="text-align: right; font-size: 12px; color: #00d1ff;"><span id="scale-val">1.0</span>x</p>
-        </div>
-        
+        <h3>1. Subir Modelo</h3>
+        <input type="file" id="fileInput" accept=".glb">
+        <h3>2. Escalar Diseño</h3>
+        <input type="range" id="scaleInput" min="0.1" max="10" step="0.1" value="1">
+        <p style="text-align: right; color:#00d1ff;"><span id="scale-val">1.0</span>x</p>
         <button id="generateBtn">GENERAR CÓDIGO QR</button>
     </div>
-
     <div id="container3d"></div>
-
     <div id="presentation">
-        <div id="closeBtn" onclick="document.getElementById('presentation').style.display='none'">CERRAR</div>
-        <div class="pres-box">
-            <h2 style="margin-bottom: 20px;">1. ESCANEA EL QR</h2>
-            <div id="qrcode"></div>
-        </div>
-        <div class="pres-box">
-            <h2 style="margin-bottom: 20px;">2. APUNTA AL MARCADOR</h2>
-            <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="hiro-img">
-        </div>
+        <button onclick="document.getElementById('presentation').style.display='none'" style="position:absolute; top:20px; left:20px; padding:10px; cursor:pointer;">CERRAR</button>
+        <div class="pres-box"><h2>1. ESCANEA EL QR</h2><div id="qrcode"></div></div>
+        <div class="pres-box"><h2>2. APUNTA AL MARCADOR</h2><img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="hiro-img"></div>
     </div>
 
     <script type="module">
@@ -74,7 +47,7 @@
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-        let scene, camera, renderer, robot, marker;
+        let scene, camera, renderer, robot;
         const CLOUD_NAME = "dudse9ysg";
         const UPLOAD_PRESET = "Clase_3d";
 
@@ -86,37 +59,30 @@
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth - 280, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
             renderer.outputColorSpace = THREE.SRGBColorSpace;
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
             renderer.toneMappingExposure = 1.3;
             document.getElementById('container3d').appendChild(renderer.domElement);
 
             scene.add(new THREE.AmbientLight(0xffffff, 1.2));
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5);
-            directionalLight.position.set(5, 15, 7.5);
-            scene.add(directionalLight);
-
+            const sun = new THREE.DirectionalLight(0xffffff, 2.5);
+            sun.position.set(5, 15, 7.5);
+            scene.add(sun);
             scene.add(new THREE.GridHelper(10, 20, 0x444444, 0x222222));
 
             new THREE.TextureLoader().load('https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg', (txt) => {
-                const markerMesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({ map: txt }));
-                markerMesh.rotation.x = -Math.PI / 2;
-                markerMesh.position.y = 0.005;
-                scene.add(markerMesh);
+                const marker = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({ map: txt }));
+                marker.rotation.x = -Math.PI / 2; marker.position.y = 0.005; scene.add(marker);
             });
 
             const loader = new GLTFLoader();
-            const controls = new OrbitControls(camera, renderer.domElement);
+            new OrbitControls(camera, renderer.domElement);
 
             document.getElementById('fileInput').onchange = (e) => {
                 const file = e.target.files[0];
                 if(file) {
                     if(robot) scene.remove(robot);
-                    loader.load(URL.createObjectURL(file), (g) => {
-                        robot = g.scene;
-                        scene.add(robot);
-                    });
+                    loader.load(URL.createObjectURL(file), (g) => { robot = g.scene; scene.add(robot); });
                 }
             };
 
@@ -147,7 +113,6 @@
             };
             animate();
         }
-
         function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
         init();
     </script>
