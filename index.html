@@ -15,20 +15,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #050811; color: white; display: flex; height: 100vh; overflow: hidden; }
-        
         #header-title { position: absolute; top: 0; width: 100%; text-align: center; padding: 20px; background: rgba(5, 8, 17, 0.8); backdrop-filter: blur(15px); z-index: 200; border-bottom: 1px solid rgba(56, 189, 248, 0.2); }
         #header-title h1 { margin: 0; font-size: 1rem; color: #00d1ff; text-transform: uppercase; letter-spacing: 4px; }
         #version-tag { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #334155; z-index: 1000; font-weight: bold; }
 
-        /* SIDEBAR IZQUIERDA: SUBIDA Y ELIMINAR */
+        /* SIDEBAR IZQUIERDA */
         #sidebar-left { width: 180px; background: rgba(30, 41, 59, 0.4); border-right: 1px solid rgba(255,255,255,0.1); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px; }
-        
-        .upload-box { background: #1e293b; border: 2px dashed #00d1ff; padding: 20px; border-radius: 15px; cursor: pointer; color: #00d1ff; font-size: 10px; font-weight: bold; text-align: center; width: 100px; transition: 0.3s; }
-        .upload-box:hover { background: rgba(0, 209, 255, 0.1); }
+        .upload-btn { background: #1e293b; border: 2px dashed #00d1ff; padding: 15px; border-radius: 12px; cursor: pointer; color: #00d1ff; font-size: 10px; font-weight: bold; text-align: center; width: 100px; }
+        .btn-delete { padding: 10px 20px; background: #fec195; font-size: 11px; font-weight: bold; color: #181818; border: none; border-radius: 8px; cursor: pointer; }
 
-        .btn-delete { position: relative; padding: 10px 20px; background: #fec195; font-size: 11px; font-weight: bold; color: #181818; border: none; border-radius: 8px; cursor: pointer; }
-
-        /* CONTROLES DERECHA: ALTURA (LIMPIO) */
+        /* CONTROLES DERECHA */
         #height-controls { position: absolute; top: 120px; right: 130px; display: flex; flex-direction: column; gap: 35px; z-index: 1000; }
         .pushable { position: relative; border: none; background: transparent; padding: 0; cursor: pointer; }
         .shadow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px; background: rgba(0,0,0,0.5); transform: translateY(2px); transition: transform 600ms cubic-bezier(.3, .7, .4, 1); }
@@ -38,22 +34,23 @@
         .edge-down { background: #4a0072; } .front-down { background: #9d50bb; }
         .pushable:active .front { transform: translateY(-2px); }
 
-        /* SIDEBAR DERECHA: ESCALA */
+        /* SIDEBAR ESCALA */
         #sidebar-right { width: 100px; background: rgba(30, 41, 59, 0.4); border-left: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
         .vertical-slider { appearance: slider-vertical; width: 6px; height: 300px; background: #334155; outline: none; border-radius: 10px; }
 
-        /* BOTÓN QR GALÁCTICO */
-        .btn-space {
-            display: flex; justify-content: center; align-items: center; width: 16rem; overflow: hidden; height: 3.5rem; background-size: 300% 300%; backdrop-filter: blur(1rem); border-radius: 5rem; transition: 0.5s; animation: gradient_301 5s ease infinite; border: double 4px transparent;
+        /* BOTÓN GENERAR QR (SPACE) */
+        #generateBtn {
+            display: flex; justify-content: center; align-items: center; width: 14rem; overflow: hidden; height: 3.5rem; background-size: 300% 300%; border-radius: 5rem; transition: 0.5s; animation: gradient_301 5s ease infinite; border: double 4px transparent;
             background-image: linear-gradient(#212121, #212121), linear-gradient(137.48deg, #ffdb3b 10%, #fe53bb 45%, #8f51ea 67%, #0044ff 87%);
             background-origin: border-box; background-clip: content-box, border-box;
             position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; cursor: pointer;
         }
-        #container-stars { position: absolute; z-index: -1; width: 100%; height: 100%; overflow: hidden; transition: 0.5s; backdrop-filter: blur(1rem); border-radius: 5rem; }
+        #container-stars { position: absolute; z-index: -1; width: 100%; height: 100%; overflow: hidden; border-radius: 5rem; }
         #stars { position: relative; background: transparent; width: 200rem; height: 200rem; }
         #stars::after { content: ""; position: absolute; top: -10rem; left: -100rem; width: 100%; height: 100%; animation: animStarRotate 90s linear infinite; background-image: radial-gradient(#ffffff 1px, transparent 1%); background-size: 50px 50px; }
         @keyframes animStarRotate { from { transform: rotate(360deg); } to { transform: rotate(0); } }
         @keyframes gradient_301 { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        #generateBtn strong { z-index: 2; font-family: sans-serif; font-size: 11px; letter-spacing: 2px; color: #ffffff; text-shadow: 0 0 4px white; }
 
         #container3d { flex-grow: 1; position: relative; }
         #presentation { display: none; position: fixed; inset: 0; background: white; z-index: 2000; flex-direction: row; align-items: center; justify-content: center; gap: 80px; color: black; }
@@ -67,7 +64,7 @@
     </style>
 </head>
 <body>
-    <div id="version-tag">VERSION 1.9</div>
+    <div id="version-tag">VERSION 2.0</div>
     <div id="custom-cursor">
         <div id="cursor-icon"><div class="cursor-btn btn-left"></div><div class="cursor-btn btn-right"></div></div>
         <div class="cursor-labels"><span style="color:#f59aff">ROTAR</span><span style="color:#38bdf8">MOVER</span></div>
@@ -76,9 +73,7 @@
     <div id="header-title"><h1>Visualizador de modelo 3D con realidad aumentada</h1></div>
 
     <div id="sidebar-left">
-        <div class="upload-box" onclick="document.getElementById('fileInput').click()" id="upload-txt">
-            SUBIR ARCHIVO (GLB)
-        </div>
+        <div class="upload-btn" onclick="document.getElementById('fileInput').click()" id="upload-txt">SUBIR ARCHIVO (GLB)</div>
         <input type="file" id="fileInput" hidden accept=".glb">
         <button class="btn-delete" id="deleteBtn">ELIMINAR</button>
     </div>
@@ -92,13 +87,13 @@
 
     <div id="sidebar-right">
         <span style="writing-mode: vertical-rl; margin-bottom: 15px; font-size: 11px; color: #00d1ff; font-weight: bold; letter-spacing: 2px;">ESCALAR DISEÑO</span>
-        <input type="range" id="scaleInput" class="vertical-slider" min="0.1" max="15" step="0.1" value="1">
+        <input type="range" id="scaleInput" class="vertical-slider" min="0.1" max="20" step="0.1" value="1">
         <div id="scale-val" style="margin-top:10px; font-weight:bold; color:#00d1ff;">1.0x</div>
     </div>
 
-    <button class="btn-space" id="generateBtn">
+    <button id="generateBtn">
         <div id="container-stars"><div id="stars"></div></div>
-        <strong style="color:white; font-size:10px; letter-spacing:2px; z-index:2; font-family:sans-serif;">GENERAR CÓDIGO QR</strong>
+        <strong>GENERAR CÓDIGO QR</strong>
     </button>
 
     <div id="presentation">
@@ -131,10 +126,9 @@
             renderer.toneMappingExposure = 1.4;
             document.getElementById('container3d').appendChild(renderer.domElement);
 
-            scene.add(new THREE.AmbientLight(0xffffff, 1.8));
+            scene.add(new THREE.AmbientLight(0xffffff, 2));
             const sun = new THREE.DirectionalLight(0xffffff, 2.5); sun.position.set(5, 15, 10); scene.add(sun);
             scene.add(new THREE.GridHelper(15, 30, 0x1e293b, 0x0f172a));
-            scene.add(new THREE.AxesHelper(6));
 
             new THREE.TextureLoader().load('https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg', (t) => {
                 const marker = new THREE.Mesh(new THREE.PlaneGeometry(3, 3), new THREE.MeshBasicMaterial({ map: t }));
@@ -146,18 +140,11 @@
                 const file = e.target.files[0];
                 if(file) {
                     if(robot) scene.remove(robot);
-                    loader.load(URL.createObjectURL(file), (g) => { 
-                        robot = g.scene; scene.add(robot); 
-                        document.getElementById('upload-txt').innerText = "ARCHIVO LISTO";
-                    });
+                    loader.load(URL.createObjectURL(file), (g) => { robot = g.scene; scene.add(robot); });
                 }
             };
 
-            document.getElementById('deleteBtn').onclick = () => {
-                if(robot) { scene.remove(robot); robot = null; }
-                document.getElementById('fileInput').value = "";
-                document.getElementById('upload-txt').innerText = "SUBIR ARCHIVO (GLB)";
-            };
+            document.getElementById('deleteBtn').onclick = () => { if(robot) { scene.remove(robot); robot = null; } };
 
             controls = new OrbitControls(camera, renderer.domElement);
             window.addEventListener('mousemove', (e) => {
@@ -190,22 +177,27 @@
         document.getElementById('generateBtn').onclick = async () => {
             const file = document.getElementById('fileInput').files[0];
             if(!file) return alert("Sube un modelo primero");
-            const btnStrong = document.querySelector('.btn-space strong');
-            btnStrong.innerText = "SUBIENDO...";
-            const formData = new FormData(); formData.append('file', file); formData.append('upload_preset', "Clase_3d");
+            const btnText = document.querySelector('#generateBtn strong');
+            btnText.innerText = "SUBIENDO...";
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', "Clase_3d");
 
             try {
-                // Volvemos al método de subida estable
+                // MOTOR DE SUBIDA LIMPIO (EL DEL DIAGNÓSTICO)
                 const res = await fetch(`https://api.cloudinary.com/v1_1/dudse9ysg/upload`, { method: 'POST', body: formData });
                 const data = await res.json();
+                
                 if(data.secure_url) {
                     let baseUrl = window.location.href.split('index.html')[0];
-                    let finalUrl = `${baseUrl}view.html?model=${encodeURIComponent(data.secure_url)}&s=${document.getElementById('scaleInput').value}&px=${robot.position.x}&py=${robot.position.y}&pz=${robot.position.z}&rx=${THREE.MathUtils.radToDeg(robot.rotation.x).toFixed(0)}&ry=${THREE.MathUtils.radToDeg(robot.rotation.y).toFixed(0)}&rz=${THREE.MathUtils.radToDeg(robot.rotation.z).toFixed(0)}`;
-                    document.getElementById('qrcode').innerHTML = ""; new QRCode(document.getElementById("qrcode"), { text: finalUrl, width: 300, height: 300 });
+                    let finalUrl = `${baseUrl}view.html?model=${encodeURIComponent(data.secure_url)}&s=${document.getElementById('scaleInput').value}&px=${robot.position.x.toFixed(2)}&py=${robot.position.y.toFixed(2)}&pz=${robot.position.z.toFixed(2)}&rx=${THREE.MathUtils.radToDeg(robot.rotation.x).toFixed(0)}&ry=${THREE.MathUtils.radToDeg(robot.rotation.y).toFixed(0)}&rz=${THREE.MathUtils.radToDeg(robot.rotation.z).toFixed(0)}`;
+                    document.getElementById('qrcode').innerHTML = "";
+                    new QRCode(document.getElementById("qrcode"), { text: finalUrl, width: 300, height: 300 });
                     document.getElementById('presentation').style.display = 'flex';
                 }
             } catch (err) { alert("Error de red."); }
-            btnStrong.innerText = "GENERAR CÓDIGO QR";
+            btnText.innerText = "GENERAR CÓDIGO QR";
         };
         document.getElementById('closeBtn').onclick = () => document.getElementById('presentation').style.display = 'none';
     </script>
