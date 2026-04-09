@@ -27,11 +27,10 @@
             border: 1px solid #00d1ff; pointer-events: none;
         }
 
-        /* CONTENEDOR DE BOTONES (OVERLAY) */
-        #ar-overlay {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 15px; z-index: 10000; width: 90%; justify-content: center;
-            pointer-events: none; /* Dejar pasar toques si no es en botones */
+        /* CONTENEDOR DE INTERFAZ */
+        #ui-interface {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 15px; z-index: 10000; width: 95%; justify-content: center;
         }
 
         .btn {
@@ -39,7 +38,6 @@
             font-weight: bold; font-size: 14px; cursor: pointer;
             font-family: sans-serif; text-transform: uppercase;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            pointer-events: auto; /* Activar toques solo en botones */
         }
 
         .btn-blue { background: #00d1ff; color: black; }
@@ -56,19 +54,19 @@
 </head>
 <body style="margin: 0; background: transparent;">
     
-    <div id="version-tag">VERSION 2.1</div>
+    <div id="version-tag">VERSION 2.2</div>
 
     <!-- LEYENDA -->
     <div id="top-msg" class="header-msg">
         Busca un marcador hiro para que salga la realidad aumenada
     </div>
 
-    <!-- ESTO ES EL OVERLAY QUE SE LLEVA EL CELULAR AL MODO AR -->
-    <div id="ar-overlay">
-        <!-- Este botón inicia el modo superficie -->
+    <!-- INTERFAZ DE BOTONES -->
+    <div id="ui-interface">
+        <!-- Botón inicial visible -->
         <button class="btn btn-blue" id="start-ar-btn">Activar Ar</button>
         
-        <!-- Estos botones aparecen solo cuando el modo superficie está activo -->
+        <!-- Botones secundarios (ocultos hasta cambiar de modo) -->
         <button class="btn btn-white" id="go-qr-btn" style="display: none;" onclick="location.reload()">⬅ Modo QR</button>
         <button class="btn btn-blue" id="reset-ar-btn" style="display: none;">🔄 Reiniciar</button>
     </div>
@@ -92,7 +90,7 @@
         shadow-intensity="1" 
         environment-image="neutral">
         
-        <!-- Slot de overlay: lo que pongas aquí se verá dentro de la AR -->
+        <!-- Aquí inyectaremos la interfaz para que sea visible en AR -->
     </model-viewer>
 
     <script>
@@ -104,7 +102,7 @@
         const fViewer = document.getElementById('floorViewer');
         const topMsg = document.getElementById('top-msg');
         const hiroScene = document.getElementById('hiroScene');
-        const arOverlay = document.getElementById('ar-overlay');
+        const uiInterface = document.getElementById('ui-interface');
 
         if(m && m !== "null") {
             elMarker.setAttribute('gltf-model', m);
@@ -112,41 +110,42 @@
             fViewer.src = m;
         }
 
-        // VINCULAR EL OVERLAY AL VISOR DE GOOGLE
-        // Esto es clave para que los botones no desaparezcan
-        fViewer.appendChild(arOverlay);
-
-        // BOTÓN: EMPEZAR MODO SUPERFICIE
+        // ACCIÓN: ACTIVAR MODO SUPERFICIE
         document.getElementById('start-ar-btn').onclick = () => {
             topMsg.innerText = "Busca una superficie plana para colocar el diseño";
             
-            // Cambiar visibilidad de botones
+            // 1. Intercambiar visibilidad de botones
             document.getElementById('start-ar-btn').style.display = 'none';
             document.getElementById('go-qr-btn').style.display = 'block';
             document.getElementById('reset-ar-btn').style.display = 'block';
             
-            // Pausar motor de marcador
+            // 2. Mover la interfaz DENTRO del visor de Google (DOM Overlay)
+            fViewer.appendChild(uiInterface);
+            fViewer.appendChild(topMsg);
+
+            // 3. Pausar motor de marcador
             hiroScene.style.display = 'none';
             const video = document.querySelector('#arjs-video');
             if(video) video.pause();
 
+            // 4. Iniciar AR de superficie
             fViewer.style.display = 'block';
             fViewer.activateAR();
         };
 
-        // BOTÓN: REINICIAR (Vuelve a pedir el suelo)
+        // BOTÓN: REINICIAR AR
         document.getElementById('reset-ar-btn').onclick = () => {
             fViewer.activateAR();
         };
 
-        // DETECTAR SI EL USUARIO CIERRA CON LA "X" NATIVA
+        // DETECTAR SI EL USUARIO CIERRA EL MODO SUPERFICIE
         fViewer.addEventListener('ar-status', (event) => {
             if (event.detail.status === 'not-presenting') {
-                location.reload();
+                location.reload(); // Reinicio limpio para evitar cámara congelada
             }
         });
 
-        // Parche pantalla completa
+        // Parche de video a pantalla completa
         setInterval(() => {
             const v = document.querySelector('#arjs-video');
             if (v && !v.paused) {
