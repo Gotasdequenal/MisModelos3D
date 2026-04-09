@@ -19,43 +19,45 @@
         }
         .a-canvas { width: 100% !important; height: 100% !important; }
 
-        /* LEYENDA SUPERIOR */
-        #instruccion-superior {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: 80%;
-            background: rgba(0, 0, 0, 0.6); color: white; padding: 10px 15px; border-radius: 10px;
+        /* LEYENDAS DE INSTRUCCIÓN */
+        .leyenda {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: 85%;
+            background: rgba(0, 0, 0, 0.7); color: white; padding: 12px; border-radius: 10px;
             text-align: center; font-size: 14px; z-index: 10000; font-family: sans-serif;
-            border: 1px solid rgba(0, 209, 255, 0.3); pointer-events: none;
+            border: 1px solid #00d1ff; pointer-events: none;
         }
 
-        /* BOTÓN ACTIVAR AR */
+        /* BOTÓN CAMBIO DE MODO */
         #btn-cambiar-modo {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
             padding: 18px 35px; background: #00d1ff; color: black; border: none;
             border-radius: 50px; font-weight: bold; font-size: 16px; z-index: 10000;
-            box-shadow: 0 4px 20px rgba(0,209,255,0.6); cursor: pointer; font-family: sans-serif;
+            box-shadow: 0 4px 20px rgba(0,209,255,0.6); cursor: pointer;
         }
 
-        /* MODEL VIEWER (Invisible para evitar el flash blanco) */
         model-viewer {
             display: none; width: 100%; height: 100%; position: fixed;
             top: 0; left: 0; z-index: 5000; opacity: 0;
         }
 
-        #version-tag { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: white; z-index: 1000; font-weight: bold; opacity: 0.5; pointer-events: none; font-family: sans-serif; }
+        #version-tag { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: white; z-index: 1000; font-weight: bold; opacity: 0.5; }
     </style>
 </head>
 <body style="margin: 0; background: transparent;">
     
-    <div id="version-tag">VERSION 1.8</div>
-    <div id="instruccion-superior">Buscar un marcador hiro para que salga la realidad aumenada</div>
+    <div id="version-tag">VERSION 1.9</div>
+
+    <!-- LEYENDA DINÁMICA -->
+    <div id="msg-guia" class="leyenda">
+        Busca un marcador hiro para que salga la realidad aumenada
+    </div>
+
     <button id="btn-cambiar-modo">Activar Ar</button>
 
-    <!-- MODO 1: MARCADOR (Detección suavizada para persistencia) -->
-    <a-scene id="escena-marcador" embedded arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 1280; displayHeight: 720;" vr-mode-ui="enabled: false" renderer="colorManagement: true; physicallyCorrectLights: true;">
+    <!-- MODO 1: MARCADOR -->
+    <a-scene id="escena-marcador" embedded arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 1280; displayHeight: 720;" vr-mode-ui="enabled: false">
         <a-assets><a-asset-item id="modelo" src=""></a-asset-item></a-assets>
-
-        <!-- LÓGICA DE PERSISTENCIA: smoothCount evita que desaparezca al parpadear -->
-        <a-marker preset="hiro" id="markerHiro" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+        <a-marker preset="hiro" id="markerHiro" smooth="true" smoothCount="10">
             <a-entity id="entidad" gltf-model="" position="0 0 0" scale="1 1 1"></a-entity>
         </a-marker>
         <a-entity camera></a-entity>
@@ -73,8 +75,7 @@
         const visorSuperficie = document.getElementById('visor-superficie');
         const btnModo = document.getElementById('btn-cambiar-modo');
         const escenaMarcador = document.getElementById('escena-marcador');
-        const leyenda = document.getElementById('instruccion-superior');
-        const marker = document.getElementById('markerHiro');
+        const msgGuia = document.getElementById('msg-guia');
 
         if(m) {
             const urlFinal = decodeURIComponent(m);
@@ -83,56 +84,32 @@
             visorSuperficie.src = urlFinal;
         }
 
-        // LÓGICA DE PERSISTENCIA MANUAL
-        marker.addEventListener('markerLost', () => {
-            // Cuando se pierde el marcador, forzamos que el robot siga visible
-            // Se quedará en la última posición conocida
-            setTimeout(() => {
-                if (!marker.visible) {
-                    entidadMarcador.setAttribute('visible', 'true');
-                }
-            }, 100);
-        });
-
-        // CAMBIO A SUPERFICIE
+        // ACTIVAR MODO SUPERFICIE
         btnModo.addEventListener('click', () => {
-            leyenda.style.display = 'none';
-            btnModo.style.display = 'none';
-            // Pausamos el video de A-frame para que no consuma recursos
+            msgGuia.innerText = "Busca una superficie plana para activar el Ar";
+            
+            // Pausar A-Frame
             const video = document.querySelector('#arjs-video');
             if(video) video.pause();
 
             visorSuperficie.style.display = 'block';
             visorSuperficie.activateAR();
+            
+            btnModo.style.display = 'none';
         });
 
-        // ARREGLO PARA EL CONGELAMIENTO (AL VOLVER DE LA X)
+        // DETECTAR REGRESO (Cierre de X)
         visorSuperficie.addEventListener('ar-status', (event) => {
             if (event.detail.status === 'not-presenting') {
-                visorSuperficie.style.display = 'none';
-                
-                // Forzamos reinicio del sistema de marcador
-                escenaMarcador.style.display = 'block';
-                const video = document.querySelector('#arjs-video');
-                if(video) {
-                    video.play(); // Reanudamos el video
-                    // Pequeño hack para despertar al motor de rastreo
-                    window.dispatchEvent(new Event('resize')); 
-                }
-                
-                btnModo.style.display = 'block';
-                leyenda.style.display = 'block';
+                // REINICIO FORZADO
+                location.reload(); // Es la forma más segura de evitar el freeze de cámara
             }
         });
 
-        // Mantener video ajustado siempre
-        setInterval(() => {
-            const v = document.querySelector('#arjs-video');
-            if (v && !v.paused) {
-                v.style.width = window.innerWidth + 'px';
-                v.style.height = window.innerHeight + 'px';
-            }
-        }, 1000);
+        // Persistencia sutil
+        document.getElementById('markerHiro').addEventListener('markerLost', () => {
+            setTimeout(() => { entidadMarcador.setAttribute('visible', 'true'); }, 100);
+        });
     </script>
 </body>
 </html>
