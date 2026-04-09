@@ -23,30 +23,33 @@
         .header-msg {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: 85%;
             background: rgba(0, 0, 0, 0.8); color: white; padding: 12px; border-radius: 12px;
-            text-align: center; font-size: 14px; z-index: 10000; font-family: sans-serif;
+            text-align: center; font-size: 13px; z-index: 10000; font-family: sans-serif;
             border: 1px solid #00d1ff; pointer-events: none;
         }
 
         /* CONTENEDOR DE INTERFAZ */
         #ui-interface {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 15px; z-index: 10000; width: 95%; justify-content: center;
+            display: flex; flex-wrap: wrap; gap: 10px; z-index: 10000; width: 95%; justify-content: center;
         }
 
         .btn {
-            padding: 15px 25px; border: none; border-radius: 50px;
-            font-weight: bold; font-size: 14px; cursor: pointer;
+            padding: 12px 20px; border: none; border-radius: 50px;
+            font-weight: bold; font-size: 13px; cursor: pointer;
             font-family: sans-serif; text-transform: uppercase;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
         .btn-blue { background: #00d1ff; color: black; }
         .btn-white { background: white; color: black; }
+        .btn-red { background: #ff4444; color: white; }
 
-        /* VISOR DE SUPERFICIE */
+        /* VISOR DE SUPERFICIE (TOTALMENTE TRANSPARENTE) */
         model-viewer {
             display: none; width: 100%; height: 100%; position: fixed;
-            top: 0; left: 0; z-index: 5000; --poster-color: transparent;
+            top: 0; left: 0; z-index: 5000;
+            background-color: transparent;
+            --poster-color: transparent;
         }
 
         #version-tag { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: white; z-index: 1000; font-weight: bold; opacity: 0.5; }
@@ -54,25 +57,21 @@
 </head>
 <body style="margin: 0; background: transparent;">
     
-    <div id="version-tag">VERSION 2.2</div>
+    <div id="version-tag">VERSION 2.3</div>
 
-    <!-- LEYENDA -->
     <div id="top-msg" class="header-msg">
         Busca un marcador hiro para que salga la realidad aumenada
     </div>
 
-    <!-- INTERFAZ DE BOTONES -->
     <div id="ui-interface">
-        <!-- Botón inicial visible -->
         <button class="btn btn-blue" id="start-ar-btn">Activar Ar</button>
-        
-        <!-- Botones secundarios (ocultos hasta cambiar de modo) -->
         <button class="btn btn-white" id="go-qr-btn" style="display: none;" onclick="location.reload()">⬅ Modo QR</button>
-        <button class="btn btn-blue" id="reset-ar-btn" style="display: none;">🔄 Reiniciar</button>
+        <button class="btn btn-blue" id="fix-btn" style="display: none;">🔒 Fijar Diseño</button>
+        <button class="btn btn-red" id="reset-ar-btn" style="display: none;">🔄 Reiniciar</button>
     </div>
 
     <!-- MODO 1: MARCADOR (MOTOR 1.5) -->
-    <a-scene id="hiroScene" embedded arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 1280; displayHeight: 720;" vr-mode-ui="enabled: false" renderer="colorManagement: true; physicallyCorrectLights: true;">
+    <a-scene id="hiroScene" embedded arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 1280; displayHeight: 720;" vr-mode-ui="enabled: false">
         <a-assets><a-asset-item id="modelo" src=""></a-asset-item></a-assets>
         <a-marker preset="hiro" id="markerHiro">
             <a-entity id="entidad" gltf-model="" position="0 0 0" scale="1 1 1"></a-entity>
@@ -85,12 +84,10 @@
         id="floorViewer" 
         src="" 
         ar 
-        ar-modes="webxr scene-viewer" 
+        ar-modes="webxr" 
         camera-controls 
         shadow-intensity="1" 
         environment-image="neutral">
-        
-        <!-- Aquí inyectaremos la interfaz para que sea visible en AR -->
     </model-viewer>
 
     <script>
@@ -104,6 +101,8 @@
         const hiroScene = document.getElementById('hiroScene');
         const uiInterface = document.getElementById('ui-interface');
 
+        let isFixed = false;
+
         if(m && m !== "null") {
             elMarker.setAttribute('gltf-model', m);
             elMarker.setAttribute('scale', `${s} ${s} ${s}`);
@@ -112,40 +111,57 @@
 
         // ACCIÓN: ACTIVAR MODO SUPERFICIE
         document.getElementById('start-ar-btn').onclick = () => {
-            topMsg.innerText = "Busca una superficie plana para colocar el diseño";
+            topMsg.innerText = "Busca una superficie plana y toca para colocar el robot";
             
-            // 1. Intercambiar visibilidad de botones
             document.getElementById('start-ar-btn').style.display = 'none';
             document.getElementById('go-qr-btn').style.display = 'block';
+            document.getElementById('fix-btn').style.display = 'block';
             document.getElementById('reset-ar-btn').style.display = 'block';
             
-            // 2. Mover la interfaz DENTRO del visor de Google (DOM Overlay)
             fViewer.appendChild(uiInterface);
             fViewer.appendChild(topMsg);
 
-            // 3. Pausar motor de marcador
             hiroScene.style.display = 'none';
             const video = document.querySelector('#arjs-video');
             if(video) video.pause();
 
-            // 4. Iniciar AR de superficie
             fViewer.style.display = 'block';
             fViewer.activateAR();
         };
 
-        // BOTÓN: REINICIAR AR
-        document.getElementById('reset-ar-btn').onclick = () => {
-            fViewer.activateAR();
+        // BOTÓN: FIJAR / DESBLOQUEAR DISEÑO
+        document.getElementById('fix-btn').onclick = () => {
+            isFixed = !isFixed;
+            if(isFixed) {
+                // Desactiva los controles de movimiento
+                fViewer.removeAttribute('camera-controls');
+                document.getElementById('fix-btn').innerText = "🔓 Desbloquear";
+                document.getElementById('fix-btn').classList.replace('btn-blue', 'btn-white');
+            } else {
+                // Activa los controles de nuevo
+                fViewer.setAttribute('camera-controls', '');
+                document.getElementById('fix-btn').innerText = "🔒 Fijar Diseño";
+                document.getElementById('fix-btn').classList.replace('btn-white', 'btn-blue');
+            }
         };
 
-        // DETECTAR SI EL USUARIO CIERRA EL MODO SUPERFICIE
+        // BOTÓN: REINICIAR (Arreglado para no soltar error)
+        document.getElementById('reset-ar-btn').onclick = () => {
+            fViewer.style.display = 'none';
+            setTimeout(() => {
+                fViewer.style.display = 'block';
+                fViewer.activateAR();
+            }, 100);
+        };
+
+        // DETECTAR CIERRE
         fViewer.addEventListener('ar-status', (event) => {
             if (event.detail.status === 'not-presenting') {
-                location.reload(); // Reinicio limpio para evitar cámara congelada
+                location.reload();
             }
         });
 
-        // Parche de video a pantalla completa
+        // Parche video
         setInterval(() => {
             const v = document.querySelector('#arjs-video');
             if (v && !v.paused) {
