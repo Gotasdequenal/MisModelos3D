@@ -14,59 +14,48 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: white; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* SIDEBAR */
-        #sidebar { width: 280px; background: #1a1a1a; padding: 25px; display: flex; flex-direction: column; gap: 20px; border-right: 1px solid #333; z-index: 100; overflow-y: auto; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #050811; color: white; display: flex; height: 100vh; overflow: hidden; }
+        #sidebar { width: 280px; background: #1a1a1a; padding: 25px; display: flex; flex-direction: column; gap: 15px; border-right: 1px solid #333; z-index: 100; overflow-y: auto; }
         h3 { margin: 0; font-size: 0.9rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-        
-        /* SLIDERS */
-        .control-group { display: flex; flex-direction: column; gap: 10px; }
+        .control-group { display: flex; flex-direction: column; gap: 10px; padding: 10px; background: #222; border-radius: 8px; }
         input[type="range"] { width: 100%; cursor: pointer; accent-color: #00d1ff; }
-        .val-label { text-align: right; font-size: 12px; color: #00d1ff; margin-top: -5px; }
-
-        button { padding: 15px; cursor: pointer; font-weight: bold; background: #00d1ff; border: none; border-radius: 8px; color: #000; transition: 0.3s; margin-top: 10px; }
-        button:hover { background: #008fb3; transform: scale(1.02); }
-
-        /* VISOR */
+        button { padding: 15px; cursor: pointer; font-weight: bold; background: #00d1ff; border: none; border-radius: 8px; color: #000; transition: 0.3s; }
+        button:disabled { background: #444; cursor: not-allowed; }
         #container3d { flex-grow: 1; position: relative; background: #000; }
-        
-        /* PANTALLA PRESENTACIÓN */
-        #presentation { 
-            display: none; position: fixed; inset: 0; background: white; z-index: 2000; 
-            flex-direction: row; align-items: center; justify-content: center; gap: 80px; color: black; 
-        }
-        .hiro-img { border: 40px solid black; width: 300px; height: 300px; }
-        #closeBtn { position: absolute; top: 20px; left: 20px; background: #eee; padding: 10px 20px; border-radius: 5px; cursor: pointer; border: 1px solid #ccc; font-weight: bold; }
-
-        #version-tag { position: fixed; bottom: 10px; left: 10px; font-size: 10px; color: #444; font-weight: bold; z-index: 1000; }
+        #presentation { display: none; position: fixed; inset: 0; background: white; z-index: 2000; flex-direction: row; align-items: center; justify-content: center; gap: 80px; color: black; }
+        #version-tag { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: #444; font-weight: bold; z-index: 1000; }
     </style>
 </head>
 <body>
-    <div id="version-tag">VERSION 1.6</div>
+    <div id="version-tag">VERSION 1.9</div>
 
     <div id="sidebar">
         <div class="control-group">
             <h3>1. Subir Modelo</h3>
             <input type="file" id="fileInput" accept=".glb">
+            <p id="file-info" style="font-size: 10px; color: #aaa; margin: 5px 0 0 0;"></p>
         </div>
         
         <div class="control-group">
             <h3>2. Escala</h3>
             <input type="range" id="scaleInput" min="0.1" max="10" step="0.1" value="1">
-            <div class="val-label"><span id="scale-val">1.0</span>x</div>
+            <div style="text-align:right; font-size:12px; color:#00d1ff;"><span id="scale-val">1.0</span>x</div>
         </div>
 
         <div class="control-group">
-            <h3>3. Rotación del Modelo</h3>
-            <label style="font-size: 10px; color: #555;">EJE X</label>
-            <input type="range" id="rotX" min="-180" max="180" step="1" value="0">
-            
-            <label style="font-size: 10px; color: #555;">EJE Y</label>
-            <input type="range" id="rotY" min="-180" max="180" step="1" value="0">
-            
-            <label style="font-size: 10px; color: #555;">EJE Z</label>
-            <input type="range" id="rotZ" min="-180" max="180" step="1" value="0">
+            <h3>3. Altura (Eje Y)</h3>
+            <input type="range" id="posYInput" min="-2" max="5" step="0.1" value="0">
+            <div style="text-align:right; font-size:12px; color:#00d1ff;"><span id="pos-val">0.0</span>m</div>
+        </div>
+
+        <div class="control-group">
+            <h3>4. Rotación</h3>
+            <label style="font-size: 9px; color:#666;">EJE X</label>
+            <input type="range" id="rotX" min="-180" max="180" value="0">
+            <label style="font-size: 9px; color:#666;">EJE Y</label>
+            <input type="range" id="rotY" min="-180" max="180" value="0">
+            <label style="font-size: 9px; color:#666;">EJE Z</label>
+            <input type="range" id="rotZ" min="-180" max="180" value="0">
         </div>
         
         <button id="generateBtn">GENERAR CÓDIGO QR</button>
@@ -75,9 +64,9 @@
     <div id="container3d"></div>
 
     <div id="presentation">
-        <div id="closeBtn" onclick="document.getElementById('presentation').style.display='none'">CERRAR</div>
+        <div style="position:absolute; top:20px; left:20px; padding:10px; cursor:pointer; font-weight:bold; border:1px solid #ccc;" onclick="document.getElementById('presentation').style.display='none'">CERRAR</div>
         <div style="text-align:center"><h2>1. ESCANEA EL QR</h2><div id="qrcode"></div></div>
-        <div style="text-align:center"><h2>2. APUNTA AL MARCADOR</h2><img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" class="hiro-img"></div>
+        <div style="text-align:center"><h2>2. APUNTA AL MARCADOR</h2><img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" style="border: 40px solid black; width: 300px;"></div>
     </div>
 
     <script type="module">
@@ -85,20 +74,20 @@
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-        let scene, camera, renderer, robot, marker;
+        let scene, camera, renderer, robot;
         const CLOUD_NAME = "dudse9ysg";
         const UPLOAD_PRESET = "Clase_3d";
 
         function init() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0a0a0a);
+            scene.background = new THREE.Color(0x050811);
             camera = new THREE.PerspectiveCamera(45, (window.innerWidth - 280) / window.innerHeight, 0.1, 1000);
             camera.position.set(0, 2, 5);
-
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth - 280, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.outputColorSpace = THREE.SRGBColorSpace;
+            renderer.physicallyCorrectLights = true; 
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
             renderer.toneMappingExposure = 1.2;
             document.getElementById('container3d').appendChild(renderer.domElement);
@@ -110,67 +99,74 @@
             scene.add(new THREE.GridHelper(10, 20, 0x444444, 0x222222));
 
             new THREE.TextureLoader().load('https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg', (txt) => {
-                const markerMesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({ map: txt }));
-                markerMesh.rotation.x = -Math.PI / 2;
-                scene.add(markerMesh);
+                const marker = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({ map: txt }));
+                marker.rotation.x = -Math.PI / 2; marker.position.y = 0.005; scene.add(marker);
             });
 
             const loader = new GLTFLoader();
-            const controls = new OrbitControls(camera, renderer.domElement);
+            new OrbitControls(camera, renderer.domElement);
 
             document.getElementById('fileInput').onchange = (e) => {
                 const file = e.target.files[0];
                 if(file) {
+                    const sizeMB = (file.size / (1024*1024)).toFixed(2);
+                    document.getElementById('file-info').innerText = `Peso: ${sizeMB} MB`;
+                    if(sizeMB > 10) document.getElementById('file-info').style.color = "orange";
+                    
                     if(robot) scene.remove(robot);
                     loader.load(URL.createObjectURL(file), (g) => { robot = g.scene; scene.add(robot); });
                 }
             };
 
-            // Lógica de Sliders
-            function actualizarModelo() {
+            function actualizar() {
                 if(!robot) return;
                 const s = document.getElementById('scaleInput').value;
                 document.getElementById('scale-val').innerText = s;
                 robot.scale.set(s, s, s);
                 
-                const rx = THREE.MathUtils.degToRad(document.getElementById('rotX').value);
-                const ry = THREE.MathUtils.radToDeg(document.getElementById('rotY').value); // Corregido el nombre a grados para URL
-                const rz = THREE.MathUtils.degToRad(document.getElementById('rotZ').value);
+                const py = document.getElementById('posYInput').value;
+                document.getElementById('pos-val').innerText = py;
+                robot.position.y = parseFloat(py);
                 
-                robot.rotation.set(rx, THREE.MathUtils.degToRad(document.getElementById('rotY').value), rz);
+                robot.rotation.set(
+                    THREE.MathUtils.degToRad(document.getElementById('rotX').value),
+                    THREE.MathUtils.degToRad(document.getElementById('rotY').value),
+                    THREE.MathUtils.degToRad(document.getElementById('rotZ').value)
+                );
             }
 
-            document.querySelectorAll('input[type="range"]').forEach(input => {
-                input.oninput = actualizarModelo;
-            });
+            document.querySelectorAll('input[type="range"]').forEach(i => i.oninput = actualizar);
 
             document.getElementById('generateBtn').onclick = async () => {
                 const file = document.getElementById('fileInput').files[0];
                 if(!file) return alert("Sube un archivo primero");
-                document.getElementById('generateBtn').innerText = "SUBIENDO...";
+                
+                const btn = document.getElementById('generateBtn');
+                btn.disabled = true;
+                btn.innerText = "SUBIENDO... ESPERA";
+
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('upload_preset', UPLOAD_PRESET);
-                
+                formData.append('resource_type', 'raw'); 
+
                 try {
                     const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, { method: 'POST', body: formData });
                     const data = await res.json();
+                    
                     if(data.secure_url) {
-                        const s = document.getElementById('scaleInput').value;
-                        const rx = document.getElementById('rotX').value;
-                        const ry = document.getElementById('rotY').value;
-                        const rz = document.getElementById('rotZ').value;
-
                         let baseUrl = window.location.href.split('index.html')[0];
-                        // Enviamos escala y las 3 rotaciones al view.html
-                        let finalUrl = `${baseUrl}view.html?model=${encodeURIComponent(data.secure_url)}&s=${s}&rx=${rx}&ry=${ry}&rz=${rz}`;
-                        
+                        let finalUrl = `${baseUrl}view.html?model=${encodeURIComponent(data.secure_url)}&s=${document.getElementById('scaleInput').value}&py=${document.getElementById('posYInput').value}&rx=${document.getElementById('rotX').value}&ry=${document.getElementById('rotY').value}&rz=${document.getElementById('rotZ').value}`;
                         document.getElementById('qrcode').innerHTML = "";
                         new QRCode(document.getElementById("qrcode"), { text: finalUrl, width: 300, height: 300 });
                         document.getElementById('presentation').style.display = 'flex';
+                    } else {
+                        alert("ERROR: El archivo es muy pesado para la cuenta gratuita.");
                     }
-                } catch (err) { alert("Error al subir"); }
-                document.getElementById('generateBtn').innerText = "GENERAR CÓDIGO QR";
+                } catch (err) { alert("Error de conexión."); }
+                
+                btn.disabled = false;
+                btn.innerText = "GENERAR CÓDIGO QR";
             };
             animate();
         }
