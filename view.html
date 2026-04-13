@@ -3,172 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Motores AR (1.5 Intacto) -->
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-    
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: black; }
-        
-        /* CÓDIGO CÁMARA 1.5 (INTACTO) */
         #arjs-video { 
             width: 100vw !important; height: 100vh !important; 
-            object-fit: cover !important; margin-left: 0 !important; 
-            top: 0 !important; position: fixed !important;
+            object-fit: cover !important; position: fixed !important; top: 0; left: 0; z-index: -1;
         }
         .a-canvas { width: 100% !important; height: 100% !important; }
-
-        /* LEYENDA SUPERIOR */
-        .header-msg {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: 85%;
-            background: rgba(0, 0, 0, 0.8); color: white; padding: 12px; border-radius: 12px;
-            text-align: center; font-size: 13px; z-index: 10000; font-family: sans-serif;
-            border: 1px solid #00d1ff; pointer-events: none;
-        }
-
-        /* CONTENEDOR DE INTERFAZ */
-        #ui-interface {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            display: flex; flex-wrap: wrap; gap: 10px; z-index: 10000; width: 95%; justify-content: center;
-        }
-
-        .btn {
-            padding: 12px 20px; border: none; border-radius: 50px;
-            font-weight: bold; font-size: 13px; cursor: pointer;
-            font-family: sans-serif; text-transform: uppercase;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-
-        .btn-blue { background: #00d1ff; color: black; }
-        .btn-white { background: white; color: black; }
-        .btn-red { background: #ff4444; color: white; }
-
-        /* VISOR DE SUPERFICIE (TOTALMENTE TRANSPARENTE) */
-        model-viewer {
-            display: none; width: 100%; height: 100%; position: fixed;
-            top: 0; left: 0; z-index: 5000;
-            background-color: transparent;
-            --poster-color: transparent;
-        }
-
-        #version-tag { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: white; z-index: 1000; font-weight: bold; opacity: 0.5; }
+        #version-tag { position: fixed; bottom: 10px; right: 10px; font-size: 10px; color: white; z-index: 1000; font-weight: bold; opacity: 0.5; pointer-events: none; font-family: sans-serif; }
     </style>
 </head>
 <body style="margin: 0; background: transparent;">
-    
-    <div id="version-tag">VERSION 2.3</div>
+    <div id="version-tag">VERSION 1.9</div>
 
-    <div id="top-msg" class="header-msg">
-        Busca un marcador hiro para que salga la realidad aumenada
-    </div>
-
-    <div id="ui-interface">
-        <button class="btn btn-blue" id="start-ar-btn">Activar Ar</button>
-        <button class="btn btn-white" id="go-qr-btn" style="display: none;" onclick="location.reload()">⬅ Modo QR</button>
-        <button class="btn btn-blue" id="fix-btn" style="display: none;">🔒 Fijar Diseño</button>
-        <button class="btn btn-red" id="reset-ar-btn" style="display: none;">🔄 Reiniciar</button>
-    </div>
-
-    <!-- MODO 1: MARCADOR (MOTOR 1.5) -->
-    <a-scene id="hiroScene" embedded arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 1280; displayHeight: 720;" vr-mode-ui="enabled: false">
-        <a-assets><a-asset-item id="modelo" src=""></a-asset-item></a-assets>
-        <a-marker preset="hiro" id="markerHiro">
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; displayWidth: 1280; displayHeight: 720;" vr-mode-ui="enabled: false">
+        <a-marker preset="hiro">
             <a-entity id="entidad" gltf-model="" position="0 0 0" scale="1 1 1"></a-entity>
         </a-marker>
         <a-entity camera></a-entity>
     </a-scene>
 
-    <!-- MODO 2: SUPERFICIE -->
-    <model-viewer 
-        id="floorViewer" 
-        src="" 
-        ar 
-        ar-modes="webxr" 
-        camera-controls 
-        shadow-intensity="1" 
-        environment-image="neutral">
-    </model-viewer>
-
     <script>
         const p = new URLSearchParams(window.location.search);
-        const m = decodeURIComponent(p.get('model'));
-        const s = parseFloat(p.get('s') || "1");
-        
-        const elMarker = document.getElementById('entidad');
-        const fViewer = document.getElementById('floorViewer');
-        const topMsg = document.getElementById('top-msg');
-        const hiroScene = document.getElementById('hiroScene');
-        const uiInterface = document.getElementById('ui-interface');
+        const m = p.get('model');
+        const s = p.get('s') || "1";
+        const py = p.get('py') || "0"; // Recibimos la altura
+        const rx = p.get('rx') || "0";
+        const ry = p.get('ry') || "0";
+        const rz = p.get('rz') || "0";
 
-        let isFixed = false;
-
-        if(m && m !== "null") {
-            elMarker.setAttribute('gltf-model', m);
-            elMarker.setAttribute('scale', `${s} ${s} ${s}`);
-            fViewer.src = m;
+        if(m) {
+            const el = document.getElementById('entidad');
+            el.setAttribute('gltf-model', decodeURIComponent(m));
+            el.setAttribute('scale', `${s} ${s} ${s}`);
+            el.setAttribute('position', `0 ${py} 0`); // Aplicamos la altura
+            el.setAttribute('rotation', `${rx} ${ry} ${rz}`);
         }
-
-        // ACCIÓN: ACTIVAR MODO SUPERFICIE
-        document.getElementById('start-ar-btn').onclick = () => {
-            topMsg.innerText = "Busca una superficie plana y toca para colocar el robot";
-            
-            document.getElementById('start-ar-btn').style.display = 'none';
-            document.getElementById('go-qr-btn').style.display = 'block';
-            document.getElementById('fix-btn').style.display = 'block';
-            document.getElementById('reset-ar-btn').style.display = 'block';
-            
-            fViewer.appendChild(uiInterface);
-            fViewer.appendChild(topMsg);
-
-            hiroScene.style.display = 'none';
-            const video = document.querySelector('#arjs-video');
-            if(video) video.pause();
-
-            fViewer.style.display = 'block';
-            fViewer.activateAR();
-        };
-
-        // BOTÓN: FIJAR / DESBLOQUEAR DISEÑO
-        document.getElementById('fix-btn').onclick = () => {
-            isFixed = !isFixed;
-            if(isFixed) {
-                // Desactiva los controles de movimiento
-                fViewer.removeAttribute('camera-controls');
-                document.getElementById('fix-btn').innerText = "🔓 Desbloquear";
-                document.getElementById('fix-btn').classList.replace('btn-blue', 'btn-white');
-            } else {
-                // Activa los controles de nuevo
-                fViewer.setAttribute('camera-controls', '');
-                document.getElementById('fix-btn').innerText = "🔒 Fijar Diseño";
-                document.getElementById('fix-btn').classList.replace('btn-white', 'btn-blue');
-            }
-        };
-
-        // BOTÓN: REINICIAR (Arreglado para no soltar error)
-        document.getElementById('reset-ar-btn').onclick = () => {
-            fViewer.style.display = 'none';
-            setTimeout(() => {
-                fViewer.style.display = 'block';
-                fViewer.activateAR();
-            }, 100);
-        };
-
-        // DETECTAR CIERRE
-        fViewer.addEventListener('ar-status', (event) => {
-            if (event.detail.status === 'not-presenting') {
-                location.reload();
-            }
-        });
-
-        // Parche video
-        setInterval(() => {
-            const v = document.querySelector('#arjs-video');
-            if (v && !v.paused) {
-                v.style.width = window.innerWidth + 'px';
-                v.style.height = window.innerHeight + 'px';
-            }
-        }, 1000);
     </script>
 </body>
 </html>
